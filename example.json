@@ -1,0 +1,8 @@
+{
+  "Samples" : 16,
+  "Camera" : "Camera \"environment\"",
+  "World" : "world",
+  "Radius" : 32,
+  "YRange" : [3, 32],
+  "Origin" : [177, 4, 162]
+}
