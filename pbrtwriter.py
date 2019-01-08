@@ -28,6 +28,12 @@ cullface_map = {
     "south" : (0, 0, -1),
 }
 
+def hasAlpha(fn):
+    return True
+    #from PIL import Image
+    #image = Image.open(fn)
+    #return len(image.mode) == 4
+
 class Block:
     def __init__(self, name, state, model_loader):
         self.name = name
@@ -38,8 +44,25 @@ class Block:
         
         self._build()
 
+        self.solid_block = set([
+            "stone", "podzol",
+        ])
+
+        self.solid_type = [
+            "ore", "granite", "diorite", "andesite", "_planks", "dirt", "block",
+            "wood"
+        ]
+
     def _is(self, y):
         return self.name == y or self.name[-len(y)-1:] == "_" + y
+
+    def canPass(self):
+        if self.name in self.solid_block:
+            return False
+        for t in self.solid_type:
+            if self._is(t):
+                return False
+        return True
 
     def _getModel(self, name):
         model = self.ldr.getModel("block/" + name)
@@ -189,26 +212,12 @@ class Block:
         else:
             self._addModel(self.name)
 
-    def _writeRotate2(self, fout, axis, ang):
+    def _writeRotate(self, fout, axis, ang):
         org = (.5, .5, .5)
         fout.write("Translate %f %f %f\n" % org)
         rxyz = {"x" : (1, 0, 0), "y" : (0, 1, 0), "z" : (0, 0, 1)}
         fout.write(("Rotate %f " % ang) + ("%d %d %d\n" % rxyz[axis]))
         fout.write("Translate %f %f %f\n" % mult(org, -1))
-
-    def _writeRotate(self, fout, rot):
-        import math
-        axis = rot["axis"]
-        org = minus([.5, .5, .5], mult(rot["origin"], 1./16))
-        ang = rot["angle"]
-        rxyz = {"x" : (1, 0, 0), "y" : (0, 1, 0), "z" : (0, 0, 1)}
-        sxyz = {"x" : (0, 1, 1), "y" : (1, 0, 1), "z" : (1, 1, 0)}
-        scale = 1/math.cos(ang/180.*math.pi) 
-        fout.write("Translate %f %f %f\n" % mult(org, -1))
-        fout.write(("Rotate %f " % ang) + ("%d %d %d\n" % rxyz[axis]))
-        if "rescale" in rot and rot["rescale"]:
-            fout.write("Scale %f %f %f\n" % plus(mult(sxyz[axis], scale), rxyz[axis]))
-        fout.write("Translate %f %f %f\n" % org)
 
     def _writeElement(self, fout, ele):
         from_pt = ele["from"]
@@ -219,7 +228,19 @@ class Block:
         fout.write('AttributeBegin\n')
         fout.write('Translate %f %f %f\n' % mid)
         if "rotation" in ele:
-            self._writeRotate(fout, ele["rotation"])
+            import math
+            rot = ele["rotation"]
+            axis = rot["axis"]
+            org = minus([.5, .5, .5], mult(rot["origin"], 1./16))
+            ang = rot["angle"]
+            rxyz = {"x" : (1, 0, 0), "y" : (0, 1, 0), "z" : (0, 0, 1)}
+            sxyz = {"x" : (0, 1, 1), "y" : (1, 0, 1), "z" : (1, 1, 0)}
+            scale = 1/math.cos(ang/180.*math.pi)
+            fout.write("Translate %f %f %f\n" % mult(org, -1))
+            fout.write(("Rotate %f " % ang) + ("%d %d %d\n" % rxyz[axis]))
+            if "rescale" in rot and rot["rescale"]:
+                fout.write("Scale %f %f %f\n" % plus(mult(sxyz[axis], scale), rxyz[axis]))
+            fout.write("Translate %f %f %f\n" % org)
         
         for facename in ele["faces"]:
             face = ele["faces"][facename]
@@ -234,9 +255,14 @@ class Block:
                 fout.write('Material "matte" "texture Kd" "%s-color"\n' % tex)
             fout.write('AttributeBegin\n')
             fout.write('  Translate %f %f %f\n' % delta)
-            fout.write('  Shape "%s" "float l1" [%f] "float l2" [%f] ' % (shape, l1, l2) + 
-                       '  "float dir" [%d] "texture alpha" "%s-alpha"' % (dir_, tex) +
-                       '  "float u0" [%f] "float v0" [%f] "float u1" [%f] "float v1" [%f]\n' % uv)
+            if hasAlpha(tex + ".png"):
+                fout.write('  Shape "%s" "float l1" [%f] "float l2" [%f] ' % (shape, l1, l2) +
+                           '  "float dir" [%d] "texture alpha" "%s-alpha"' % (dir_, tex) +
+                           '  "float u0" [%f] "float v0" [%f] "float u1" [%f] "float v1" [%f]\n' % uv)
+            else:
+                fout.write('  Shape "%s" "float l1" [%f] "float l2" [%f] ' % (shape, l1, l2) +
+                           '  "float dir" [%d] ' % (dir_, ) +
+                           '  "float u0" [%f] "float v0" [%f] "float u1" [%f] "float v1" [%f]\n' % uv)
             fout.write('AttributeEnd\n')
 
         fout.write('AttributeEnd\n')
@@ -248,31 +274,31 @@ class Block:
         if "axis" in self.state and self.name != "nether_portal":
             axis = self.state["axis"]
             if axis == "x":
-                self._writeRotate2(fout, "z", 90)
+                self._writeRotate(fout, "z", 90)
             elif axis == "z":
-                self._writeRotate2(fout, "x", 90)
+                self._writeRotate(fout, "x", 90)
 
         if "facing" in self.state:
             facing = self.state["facing"]
             mp = {"north" : 1, "east" : 0, "south" : 3, "west" : 2}
             if facing in mp:
-                self._writeRotate2(fout, "y", mp[facing]*90)
+                self._writeRotate(fout, "y", mp[facing]*90)
             elif facing == "down":
-                self._writeRotate2(fout, "z", -90)
+                self._writeRotate(fout, "z", -90)
             elif facing == "top":
-                self._writeRotate2(fout, "z", 90)
+                self._writeRotate(fout, "z", 90)
         
         for model, transforms in self.models:
             if transforms:
                 for t in transforms:
                     if t["type"] == "rotate":
-                        self._writeRotate2(fout, t["axis"], t["angle"])
+                        self._writeRotate(fout, t["axis"], t["angle"])
             for ele in model["elements"]:
                 self._writeElement(fout, ele)
             if transforms:
                 for t in transforms[::-1]:
                     if t["type"] == "rotate":
-                        self._writeRotate2(fout, t["axis"], -t["angle"])
+                        self._writeRotate(fout, t["axis"], -t["angle"])
         fout.write('AttributeEnd\n')
 
     def getUsedTexture(self):
@@ -299,6 +325,7 @@ class WaterSolver:
 
         self._build()
 
+        # Full water block is lower than normal block
         self.eps = 0.05
 
     def _build(self):
@@ -335,7 +362,6 @@ class WaterSolver:
             for facename in pt_map:
                 cull_pt = plus_i(cullface_map[facename], pt)
                 if self.getLevel(cull_pt) != None:
-                    print("Culling face..")
                     continue
                 delta_f, l_f, dir_, shape = pt_map[facename]
                 delta = delta_f(cube)
@@ -347,6 +373,45 @@ class WaterSolver:
                            '  "float dir" [%d]' % dir_)
                 fout.write('AttributeEnd\n')
             fout.write('AttributeEnd\n')
+
+
+class BlockSolver:
+    def __init__(self, block):
+        self.block = block
+        self.Y = len(self.block)
+        self.Z = len(self.block[0])
+        self.X = len(self.block[0][0])
+
+    def _inBlock(self, pt):
+        x, y, z = pt
+        return x >= 0 and x < self.X and y >= 0 and y < self.Y and z >= 0 and z < self.Z
+
+    def render(self, fout, start_pt):
+        print("Writing solid blocks...")
+        import queue
+        que = queue.Queue()
+        rendered = set()
+        deltas = [(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)]
+        que.put(start_pt)
+        for delta in deltas:
+            que.put(plus_i(delta, start_pt))
+
+        cnt = 0
+        while not que.empty():
+            pt = que.get()
+            if not self._inBlock(pt): continue
+            if pt in rendered: continue
+            rendered.add(pt)
+            x, y, z = pt
+            b = self.block[y][z][x]
+            fout.write('Translate %f %f %f\n' % pt)
+            b.render(fout)
+            fout.write('Translate %f %f %f\n' % mult(pt, -1))
+            cnt += 1
+            if b.canPass():
+                for delta in deltas:
+                    que.put(plus_i(delta, pt))
+        print("Render", cnt, "blocks")
 
 
 class PbrtWriter:
@@ -384,33 +449,18 @@ class PbrtWriter:
                        '"string mapname" ["env/aristea_wreck_1k.png"]\n')
         fout.write('AttributeEnd\n')
 
-    def _writeWater(self, fout, block_data, pt):
-        fout.write('AttributeBegin\n')
-        fout.write('Translate %f %f %f\n' % plus(pt, (.5, .45, .5)))
-        cube = (1, .45, 1)
-        for facename in pt_map:
-            delta_f, l_f, dir_, shape = pt_map[facename]
-            delta = delta_f(cube)
-            l1, l2 = l_f(cube)
-            fout.write('Material "glass"\n')
-            fout.write('AttributeBegin\n')
-            fout.write('  Translate %f %f %f\n' % delta)
-            fout.write('  Shape "%s" "float l1" [%f] "float l2" [%f] ' % (shape, l1, l2) + 
-                       '  "float dir" [%d]' % dir_)
-            fout.write('AttributeEnd\n')
-
-        fout.write('AttributeEnd\n')
-
     def writeFile(self, filename):
         print("Start write file ...")
         self._preloadUsedData()
         fout = open(filename, "w")
 
-        fout.write('Film "image"\n')
+        fout.write('Film "image" "integer xresolution" [960] "integer yresolution" [480]\n')
         if not self.lookat_vec:
             fout.write('LookAt %f %f %f  %f %f 0  0 1 0\n' % (self.X/2, 4, self.Z/2+1, self.X/2, 4))
+            stand_pt = (self.X//2, 4, self.Z//2+1)
         else:
             fout.write('LookAt %f %f %f  %f %f %f %f %f %f\n' % self.lookat_vec) 
+            stand_pt = tuple(map(int, self.lookat_vec[:3]))
 
         if not self.camera_cmd:
             fout.write('Camera "environment"\n')
@@ -424,7 +474,8 @@ class PbrtWriter:
 
         for fn in self.used_texture:
             fout.write('Texture "%s-color" "spectrum" "imagemap" "string filename" "%s.png"\n' % (fn, fn))
-            fout.write('Texture "%s-alpha" "float" "alphamap" "string filename" "%s.png"\n' % (fn, fn))
+            if hasAlpha(fn + ".png"):
+                fout.write('Texture "%s-alpha" "float" "alphamap" "string filename" "%s.png"\n' % (fn, fn))
 
         self._writeLight(fout, (self.X/2, self.Y/2 + 10, self.Z/2))
         
@@ -442,11 +493,7 @@ class PbrtWriter:
                 self.block[y][z][x].render(fout)
                 fout.write("AttributeEnd\n")
 
-        print("Writing blocks...")
-        for x,y,z in tqdm([(x, y, z) for x in range(self.X) for y in range(self.Y) for z in range(self.Z)]):
-            pt = (x, y, z)
-            fout.write('Translate %f %f %f\n' % pt)
-            self.block[y][z][x].render(fout)
-            fout.write('Translate %f %f %f\n' % mult(pt, -1))
+        block_solver = BlockSolver(self.block)
+        block_solver.render(fout, stand_pt)
 
         fout.write('WorldEnd\n')
