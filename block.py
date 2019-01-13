@@ -186,15 +186,15 @@ class Block:
         elif self.name == "tripwire":
             # TODO
             pass
+        elif self.name == "fire":
+            self._addModel("fire_floor0")
+
+        elif self.name == "end_gateway":
+            # TODO
+            pass
+
         else:
             self._addModel(self.name)
-
-    def _writeRotate(self, fout, axis, ang):
-        org = (.5, .5, .5)
-        fout.write("Translate %f %f %f\n" % org)
-        rxyz = {"x" : (1, 0, 0), "y" : (0, 1, 0), "z" : (0, 0, 1)}
-        fout.write(("Rotate %f " % ang) + ("%d %d %d\n" % rxyz[axis]))
-        fout.write("Translate %f %f %f\n" % mult(org, -1))
 
     def _writeElement(self, fout, ele):
         from_pt = ele["from"]
@@ -244,6 +244,13 @@ class Block:
 
         fout.write('AttributeEnd\n')
 
+    def _writeRotate(self, fout, axis, ang):
+        org = (.5, .5, .5)
+        fout.write("Translate %f %f %f\n" % org)
+        rxyz = {"x" : (1, 0, 0), "y" : (0, 1, 0), "z" : (0, 0, 1)}
+        fout.write(("Rotate %f " % ang) + ("%d %d %d\n" % rxyz[axis]))
+        fout.write("Translate %f %f %f\n" % mult(org, -1))
+
     def render(self, fout):
         if not self.models : return
             
@@ -290,5 +297,3 @@ class Block:
                         exit(1)
                     used_texture.add(tex)
         return used_texture
-
-

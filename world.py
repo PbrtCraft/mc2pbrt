@@ -8,20 +8,20 @@ class BlockState:
     def __str__(self):
         return 'BlockState(' + self.name + ',' + str(self.props) + ')'
 
+
 class Block:
+    AIR = None
     def __init__(self, state):
         self.state = state
-        self.dirty = False
 
     def __str__(self):
         return 'Block(' + str(self.state) + ')'
 
-    def set_state(self, state):
-        self.dirty = True
-        self.state = state
-
     def get_state(self):
         return self.state
+
+Block.AIR = Block(BlockState('minecraft:air', {}))
+
 
 class ChunkSection:
     def __init__(self, blocks, raw_section, y_index):
@@ -36,100 +36,17 @@ class ChunkSection:
 
         return self.blocks[x + z * 16 + y * 16 ** 2]
 
-    def serialize(self):
-        serial_section = self.raw_section
-        # for b in self.blocks:
-        #     if b.dirty:
-        #         print("DirtyBlock:", b.get_state())
-        dirty = any([b.dirty for b in self.blocks])
-        if dirty:
-            self.palette = list(set([b.get_state() for b in self.blocks]))
-            serial_section.add_child(nbt.ByteTag('Y', self.y_index))
-            serial_section.add_child(self._serialize_palette())
-            serial_section.add_child(self._serialize_blockstates())
-        
-        if not serial_section.has('SkyLight'):
-            serial_section.add_child(nbt.ByteArrayTag('SkyLight', [nbt.ByteTag('None', -1) for i in range(2048)]))
-
-        if not serial_section.has('BlockLight'):
-            serial_section.add_child(nbt.ByteArrayTag('BlockLight', [nbt.ByteTag('None', -1) for i in range(2048)]))
-
-        return serial_section
-
-    def _serialize_palette(self):
-        serial_palette = nbt.ListTag('Palette', nbt.CompoundTag.clazz_id)
-        for i in range(len(self.palette)):
-            state = self.palette[i]
-            state.id = i
-            palette_item = nbt.CompoundTag('None', children=[
-                nbt.StringTag('Name', state.name)
-            ])
-            if len(state.props) != 0:
-                serial_props = nbt.CompoundTag('Properties')
-                for name, val in state.props.items():
-                    serial_props.add_child(nbt.StringTag(name, str(val)))
-                palette_item.add_child(serial_props)
-            serial_palette.add_child(palette_item)
-        
-        return serial_palette
-
-    def _serialize_blockstates(self):
-        serial_states = nbt.LongArrayTag('BlockStates')
-        width = math.ceil(math.log(len(self.palette), 2))
-        if width < 4:
-            width = 4
-        data = 0
-        for block in reversed(self.blocks):
-            data = (data << width) + block.state.id
-
-        mask = (2 ** 64) - 1
-        for i in range(int((len(self.blocks) * width)/64)):
-            lng = data & mask
-            lng = int.from_bytes(lng.to_bytes(8, byteorder='big', signed=False), byteorder='big', signed=True)
-            serial_states.add_child(nbt.LongTag('', lng))
-            data = data >> 64
-        return serial_states
 
 class Chunk:
-
-    def __init__(self, xpos, zpos, sections, raw_nbt):
+    def __init__(self, xpos, zpos, raw_nbt):
         self.xpos = xpos
         self.zpos = zpos
-        self.sections = sections
-        self.raw_nbt = raw_nbt
+        self._build(raw_nbt)
         
-    def get_block(self, block_pos):
-        return self.get_section(block_pos[1]).get_block([n % 16 for n in block_pos])
-
-    def get_section(self, y):
-        key = int(y/16)
-        if key not in self.sections:
-            self.sections[key] = ChunkSection(
-                [Block(BlockState('minecraft:air', {})) for i in range(4096)],
-                nbt.CompoundTag('None'),
-                key
-            )
-        return self.sections[key]
-
-    def find_like(self, string):
-        results = []
-        for sec in self.sections:
-            section = self.sections[sec]
-            for x1 in range(16):
-                for y1 in range(16):
-                    for z1 in range(16):
-                        if string in section.get_block((x1, y1, z1)).state.name:
-                            results.append((
-                                (x1 + self.xpos * 16, y1 + sec * 16, z1 + self.zpos * 16), 
-                                section.get_block((x1, y1, z1))
-                            ))
-        return results
-
-    # Blockstates are packed based on the number of values in the pallet. 
-    # This selects the pack size, then splits out the ids
-    def unpack(raw_nbt):
+    def _build(self, raw_nbt):
         sections = {}
-        for section in raw_nbt.get('Level').get('Sections').children:
+        level_node = raw_nbt.get('Level')
+        for section in level_node.get('Sections').children:
             flatstates = [c.get() for c in section.get('BlockStates').children]
             pack_size = int((len(flatstates) * 64) / (16**3))
             states = [
@@ -146,15 +63,8 @@ class Chunk:
             ]
             sections[section.get('Y').get()] = ChunkSection(blocks, section, section.get('Y').get())
 
-        return sections
-
-    def pack(self):
-        new_sections = nbt.ListTag('Sections', nbt.CompoundTag.clazz_id, children=[
-            self.sections[sec].serialize() for sec in self.sections
-        ])
-        self.raw_nbt.get('Level').add_child(new_sections)
-
-        return self.raw_nbt
+        self.sections = sections
+        self.biome_table = [b.get() for b in level_node.get('Biomes').children]
 
     def _read_width_from_loc(long_list, width, possition):
         offset = possition * width
@@ -185,8 +95,25 @@ class Chunk:
 
         return comp
 
+    def get_block(self, block_pos):
+        return self.get_section(block_pos[1]).get_block([n % 16 for n in block_pos])
+
+    def get_biome(self, block_pos):
+        return self.biome_table[block_pos[2]*16 + block_pos[0]]
+
+    def get_section(self, y):
+        key = int(y/16)
+        if key not in self.sections:
+            self.sections[key] = ChunkSection(
+                [Block.AIR]*4096,
+                nbt.CompoundTag('None'),
+                key
+            )
+        return self.sections[key]
+
     def __str__(self):
         return "Chunk(" + str(self.xpos) + "," + str(self.zpos) + ")"
+
 
 class World:
     def __init__(self, file_name, save_location=''):
@@ -194,16 +121,15 @@ class World:
         self.save_location = save_location
         self.chunks = {}
 
-    def __enter__(self):
-        return self
-    
-    def __exit__(self, typ, val, trace):
-        pass
-
     def get_block(self, block_pos):
         chunk_pos = self._get_chunk(block_pos)
         chunk = self.get_chunk(chunk_pos)
         return chunk.get_block(block_pos)
+
+    def get_biome(self, block_pos):
+        chunk_pos = self._get_chunk(block_pos)
+        chunk = self.get_chunk(chunk_pos)
+        return chunk.get_biome(block_pos)
 
     def get_chunk(self, chunk_pos):
         if chunk_pos not in self.chunks:
@@ -233,7 +159,6 @@ class World:
         chunk = Chunk(
             chunk_pos[0],
             chunk_pos[1],
-            Chunk.unpack(data),
             data
         )
         return chunk
