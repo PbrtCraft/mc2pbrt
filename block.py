@@ -1,10 +1,12 @@
 from util import *
 
 class Block:
-    def __init__(self, name, state, model_loader):
+    def __init__(self, name, state, biome_id, model_loader, biome_reader):
         self.name = name
         self.state = state
         self.ldr = model_loader
+        self.bdr = biome_reader
+        self.biome_id = biome_id
         # [(Model, Transform)]
         self.models = []
         
@@ -87,20 +89,15 @@ class Block:
 
         elif self._is("stairs"):
             shape = self.state["shape"]
-            if shape == "straight":
-                self._addModel(self.name)
-            elif shape == "inner_left":
-                self._addModel(self.name + "_inner", [
-                    {"type" : "rotate", "axis" : "y", "angle" : 90}
-                ])
-            elif shape == "inner_right":
-                self._addModel(self.name + "_inner")
-            elif shape == "outer_left":
-                self._addModel(self.name + "_outer", [
-                    {"type" : "rotate", "axis" : "y", "angle" : 90}
-                ])
-            elif shape == "outer_right":
-                self._addModel(self.name + "_outer")
+            transform = []
+            model_name = self.name
+            if shape[:5] in ["inner", "outer"]:
+                model_name += "_" + shape[:5]
+            if shape[-4:] == "left":
+                transform.append({"type" : "rotate", "axis" : "y", "angle" : 90})
+            if self.state["half"] == "top":
+                transform.append({"type" : "scale", "axis" : "y", "value" : -1})
+            self._addModel(model_name, transform)
 
         elif self._is("fence") or self._is("cobblestone_wall"):
             self._addModel(self.name + "_post")
@@ -227,7 +224,12 @@ class Block:
             delta = delta_f(cube)
             l1, l2 = l_f(cube)
             if "tintindex" in face:
-                fout.write('Material "matte" "texture Kd" "%s-color" "rgb I" [.2 .7 .0]\n' % tex)
+                if self._is("leaves"):
+                    tint_color = self.bdr.getFoliageColor(self.biome_id, 0) 
+                else:
+                    tint_color = self.bdr.getGrassColor(self.biome_id, 0) 
+                fout.write(('Material "matte" "texture Kd" "%s-color"' % tex) + 
+                           ('"rgb I" [%f %f %f]\n' % tint_color))
             else:
                 fout.write('Material "matte" "texture Kd" "%s-color"\n' % tex)
             fout.write('AttributeBegin\n')
@@ -251,8 +253,17 @@ class Block:
         fout.write(("Rotate %f " % ang) + ("%d %d %d\n" % rxyz[axis]))
         fout.write("Translate %f %f %f\n" % mult(org, -1))
 
+    def _writeScale(self, fout, axis, s):
+        org = (.5, .5, .5)
+        fout.write("Translate %f %f %f\n" % org)
+        axis_v = {"x" : (1, 0, 0), "y" : (0, 1, 0), "z" : (0, 0, 1)}
+        sixa_v = {"x" : (0, 1, 1), "y" : (1, 0, 1), "z" : (1, 1, 0)}
+        fout.write(("Scale %f %f %f\n" % plus(mult(axis_v[axis], s), sixa_v[axis])))
+        fout.write("Translate %f %f %f\n" % mult(org, -1))
+
     def render(self, fout):
-        if not self.models : return
+        if not self.models:
+            return 0
             
         fout.write('AttributeBegin\n')
         if "axis" in self.state and self.name != "nether_portal":
@@ -277,13 +288,18 @@ class Block:
                 for t in transforms:
                     if t["type"] == "rotate":
                         self._writeRotate(fout, t["axis"], t["angle"])
+                    elif t["type"] == "scale":
+                        self._writeScale(fout, t["axis"], t["value"])
             for ele in model["elements"]:
                 self._writeElement(fout, ele)
             if transforms:
                 for t in transforms[::-1]:
                     if t["type"] == "rotate":
                         self._writeRotate(fout, t["axis"], -t["angle"])
+                    elif t["type"] == "scale":
+                        self._writeScale(fout, t["axis"], 1/t["value"])
         fout.write('AttributeEnd\n')
+        return 1
 
     def getUsedTexture(self):
         used_texture = set()

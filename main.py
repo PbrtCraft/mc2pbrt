@@ -4,6 +4,7 @@ import json
 import world
 
 from model import ModelLoader
+from biome import Biome
 from pbrtwriter import PbrtWriter
 
 with open(sys.argv[1], "r") as f:
@@ -28,11 +29,13 @@ from tqdm import tqdm
 
 for y, dx, dz in tqdm([(y, dx, dz) for y in ys for dx in dv for dz in dv]):
     bs = w.get_block((sx+dx, y, sz+dz)).state
+    biome_id = w.get_biome((sx+dx, y, sz+dz))
     name = bs.name[10:]
-    arr[y-ys[0]][r + dz][r + dx] = [name, bs.props]
+    arr[y-ys[0]][r + dz][r + dx] = [name, bs.props, biome_id]
 
-model_loader = ModelLoader("/home/master/06/mukyu99/GitDoc/mc2pbrt")
-mp = PbrtWriter(model_loader)
+model_loader = ModelLoader("/home/master/06/mukyu99/PbrtCraft/mc2pbrt")
+biome_reader = Biome()
+mp = PbrtWriter(model_loader, biome_reader)
 mp.setBlocks(arr)
 
 if "Samples" in settings:
@@ -44,11 +47,13 @@ if "Camera" in settings:
 if "LookatVec" in settings:
     mp.lookat_vec = tuple(map(float, settings["LookatVec"]))
 
+if "EnvLight" in settings:
+    mp.envlight = settings["EnvLight"]
+
 if "Method" in settings:
     arg_str = ""
     if "MethodArg" in settings:
         arg_str = settings["MethodArg"]
     mp.method = (settings["Method"], arg_str)
-
 
 mp.writeFile(sys.argv[2])

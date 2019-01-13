@@ -7,6 +7,9 @@ mult  = lambda p,f : tuple([float(p[i])*f for i in range(3)])
 
 plus_i  = lambda p,q : tuple(map(int, [p[i]+q[i] for i in range(3)]))
 
+def clamp(x, a = 0., b = 1.):
+    return max(min(x, b), a)
+
 pt_map = {
     "east"  : (lambda c : ( c[0]/2,  0,  0), lambda c : (c[1], c[2]),  1, "quadx"),
     "west"  : (lambda c : (-c[0]/2,  0,  0), lambda c : (c[1], c[2]), -1, "quadx"),

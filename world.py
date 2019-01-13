@@ -99,7 +99,9 @@ class Chunk:
         return self.get_section(block_pos[1]).get_block([n % 16 for n in block_pos])
 
     def get_biome(self, block_pos):
-        return self.biome_table[block_pos[2]*16 + block_pos[0]]
+        z = block_pos[2]%16
+        x = block_pos[0]%16
+        return self.biome_table[z*16 + x]
 
     def get_section(self, y):
         key = int(y/16)

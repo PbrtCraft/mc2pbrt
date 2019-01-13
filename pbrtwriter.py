@@ -97,9 +97,8 @@ class BlockSolver:
             x, y, z = pt
             b = self.block[y][z][x]
             fout.write('Translate %f %f %f\n' % pt)
-            b.render(fout)
+            cnt += b.render(fout)
             fout.write('Translate %f %f %f\n' % mult(pt, -1))
-            cnt += 1
             if b.canPass():
                 for delta in deltas:
                     que.put(plus_i(delta, pt))
@@ -107,15 +106,16 @@ class BlockSolver:
 
 
 class PbrtWriter:
-    def __init__(self, model_loader):
+    def __init__(self, model_loader, biome_reader):
         self.mldr = model_loader
+        self.bdr = biome_reader
         
         self.camera_cmd = None
         self.lookat_vec = None
         self.samples = 16
         self.method = ("photonmap", "")
 
-        self.envlight = "env/aristea_wreck_1k.png"
+        self.envlight = None 
 
     def readFile(self, filename):
         f = open(filename, "r")
@@ -133,10 +133,11 @@ class PbrtWriter:
             for y in range(self.Y):
                 for z in range(self.Z):
                     d = self.block[y][z][x]
-                    self.block[y][z][x] = Block(d[0], d[1], self.mldr)
+                    self.block[y][z][x] = Block(d[0], d[1], d[2], self.mldr, self.bdr)
                     self.used_texture = self.used_texture | self.block[y][z][x].getUsedTexture()
 
-    def _writeLight(self, fout, pt):
+    def _writeEnvLight(self, fout):
+        if not self.envlight : return
         fout.write('AttributeBegin\n')
         fout.write('    Rotate 270 1 0 0 \n')
         fout.write('    LightSource "infinite" "integer nsamples" [4] "rgb L" [1 1 1]' + 
@@ -167,7 +168,7 @@ class PbrtWriter:
             if hasAlpha(fn + ".png"):
                 fout.write('Texture "%s-alpha" "float" "alphamap" "string filename" "%s.png"\n' % (fn, fn))
 
-        self._writeLight(fout, (self.X/2, self.Y/2 + 10, self.Z/2))
+        self._writeEnvLight(fout)
         
         water_solver = WaterSolver(self.block)
         water_solver.render(fout)
