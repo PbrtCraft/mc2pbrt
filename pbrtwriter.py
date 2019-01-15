@@ -67,6 +67,26 @@ class WaterSolver:
             fout.write('AttributeEnd\n')
 
 
+class LightSolver:
+    def __init__(self, block):
+        self.block = block
+        self.Y = len(self.block)
+        self.Z = len(self.block[0])
+        self.X = len(self.block[0][0])
+
+    def render(self, fout):
+        print("Writing lights...")
+        for x,y,z in tqdm([(x, y, z) for x in range(self.X) for y in range(self.Y) for z in range(self.Z)]):
+            pt = (x, y, z)
+            b = self.block[y][z][x]
+            if b.isLight():
+                fout.write("AttributeBegin\n")
+                fout.write('AreaLightSource "diffuse" "rgb L" [ .5 .5 .5 ]\n')
+                fout.write('Translate %f %f %f\n' % pt)
+                self.block[y][z][x].render(fout)
+                fout.write("AttributeEnd\n")
+
+
 class BlockSolver:
     def __init__(self, block):
         self.block = block
@@ -96,9 +116,13 @@ class BlockSolver:
             rendered.add(pt)
             x, y, z = pt
             b = self.block[y][z][x]
-            fout.write('Translate %f %f %f\n' % pt)
-            cnt += b.render(fout)
-            fout.write('Translate %f %f %f\n' % mult(pt, -1))
+
+            # shouldn't render light as a block
+            # light solver should deal with it
+            if not b.isLight():
+                fout.write('Translate %f %f %f\n' % pt)
+                cnt += b.render(fout)
+                fout.write('Translate %f %f %f\n' % mult(pt, -1))
             if b.canPass():
                 for delta in deltas:
                     que.put(plus_i(delta, pt))
@@ -148,6 +172,7 @@ class PbrtWriter:
         print("Start write file ...")
         self._preloadUsedData()
         fout = open(filename, "w")
+        fout.write("Scale -1 1 1\n")
 
         fout.write('Film "image" "integer xresolution" [960] "integer yresolution" [480]\n')
 
@@ -172,17 +197,9 @@ class PbrtWriter:
         
         water_solver = WaterSolver(self.block)
         water_solver.render(fout)
-        
-        print("Writing lights...")
-        for x,y,z in tqdm([(x, y, z) for x in range(self.X) for y in range(self.Y) for z in range(self.Z)]):
-            pt = (x, y, z)
-            name = self.block[y][z][x].name
-            if name == "torch" or name == "jack_o_lantern":
-                fout.write("AttributeBegin\n")
-                fout.write('AreaLightSource "diffuse" "rgb L" [ .5 .5 .5 ]\n')
-                fout.write('Translate %f %f %f\n' % pt)
-                self.block[y][z][x].render(fout)
-                fout.write("AttributeEnd\n")
+
+        light_solver = LightSolver(self.block)
+        light_solver.render(fout)
 
         block_solver = BlockSolver(self.block)
         block_solver.render(fout, stand_pt)

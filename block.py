@@ -21,8 +21,15 @@ class Block:
             "wood"
         ]
 
+        self.light_block = set([
+            "torch", "jack_o_lantern", "redstone_lamp"
+        ])
+
     def _is(self, y):
         return self.name == y or self.name[-len(y)-1:] == "_" + y
+
+    def isLight(self):
+        return self.name in self.light_block
 
     def canPass(self):
         if self.name in self.solid_block:
@@ -143,6 +150,10 @@ class Block:
         elif self.name in ["potatoes", "carrots"]:
             age = [0, 0, 1, 1, 2, 2, 2, 3][int(self.state["age"])]
             self._addModel(self.name + ("_stage%d" % age))
+
+        elif self.name == "nether_wart":
+            age = [0, 1, 1, 2][int(self.state["age"])]
+            self._addModel("nether_wart_stage%d" % age)
 
         elif self.name in ["melon_stem", "pumpkin_stem"]:
             age = int(self.state["age"])
