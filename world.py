@@ -1,4 +1,4 @@
-import sys, math, nbt, gzip, zlib, stream, time
+import os, sys, math, nbt, gzip, zlib, stream, time
 
 class BlockState:
     def __init__(self, name, props):
@@ -140,7 +140,9 @@ class World:
         return self.chunks[chunk_pos]
 
     def _load_chunk(self, chunk_pos):
-        with open(self.save_location + '/' + self.file_name + '/region/' + self._get_region_file(chunk_pos), mode='rb') as region:
+        import os
+        chunk_location = os.path.join(self.save_location, self.file_name, "region", self._get_region_file(chunk_pos))
+        with open(chunk_location, mode='rb') as region:
             locations = [[
                         int.from_bytes(region.read(3), byteorder='big', signed=False) * 4096, 
                         int.from_bytes(region.read(1), byteorder='big', signed=False) * 4096
@@ -167,7 +169,6 @@ class World:
 
     def _get_region_file(self, chunk_pos):
         return 'r.' + '.'.join([str(x) for x in self._get_region(chunk_pos)]) + '.mca'
-
 
     def _get_chunk(self, block_pos):
         return (math.floor(block_pos[0] / 16), math.floor(block_pos[2] / 16))

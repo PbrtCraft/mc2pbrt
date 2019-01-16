@@ -1,3 +1,6 @@
+# Example file
+config.json
+
 # Output pbrt file
 *.pbrt
 
@@ -7,7 +10,6 @@ __pycache__
 
 # Resource
 block/*.json
-
 
 # pyinstaller
 dist/

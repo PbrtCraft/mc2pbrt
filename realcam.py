@@ -40,7 +40,8 @@ if origin.find("air") == -1:
 
 from tqdm import tqdm
 
-for y, dx, dz in tqdm([(y, dx, dz) for y in ys for dx in dv for dz in dv]):
+for y, dx, dz in tqdm([(y, dx, dz) for y in ys for dx in dv for dz in dv],
+                      ascii=True):
     bs = w.get_block((isx+dx, y, isz+dz)).state
     biome_id = w.get_biome((isx+dx, y, isz+dz))
     name = bs.name[10:]

@@ -19,7 +19,8 @@ class WaterSolver:
 
     def _build(self):
         print("Building water level...")
-        for x,y,z in tqdm([(x, y, z) for x in range(self.X) for y in range(self.Y) for z in range(self.Z)]):
+        for x,y,z in tqdm([(x, y, z) for x in range(self.X) for y in range(self.Y) for z in range(self.Z)],
+                          ascii=True):
             b = self.block[y][z][x]
             if b.name == "water" or b.name == "flowing_water":
                 self.level[y][z][x] = int(b.state["level"])
@@ -45,7 +46,8 @@ class WaterSolver:
     def render(self, fout):
         print("Writing water blocks...")
         fout.write('Material "glass"\n')
-        for x,y,z in tqdm([(x, y, z) for x in range(self.X) for y in range(self.Y) for z in range(self.Z)]):
+        for x,y,z in tqdm([(x, y, z) for x in range(self.X) for y in range(self.Y) for z in range(self.Z)],
+                          ascii=True):
             if self.level[y][z][x] == None: continue
             pt = (x, y, z)
             h = self._level2height(self.level[y][z][x])
@@ -76,7 +78,8 @@ class LightSolver:
 
     def render(self, fout):
         print("Writing lights...")
-        for x,y,z in tqdm([(x, y, z) for x in range(self.X) for y in range(self.Y) for z in range(self.Z)]):
+        for x,y,z in tqdm([(x, y, z) for x in range(self.X) for y in range(self.Y) for z in range(self.Z)],
+                          ascii=True):
             pt = (x, y, z)
             b = self.block[y][z][x]
             if b.isLight():
@@ -140,10 +143,6 @@ class PbrtWriter:
         self.method = ("photonmap", "")
 
         self.envlight = None 
-
-    def readFile(self, filename):
-        f = open(filename, "r")
-        self.block = json.load(f)
 
     def setBlocks(self, block):
         self.block = block
