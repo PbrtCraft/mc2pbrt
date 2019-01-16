@@ -7,7 +7,7 @@ from model import ModelLoader
 from biome import Biome
 from pbrtwriter import PbrtWriter
 
-with open(sys.argv[1], "r") as f:
+with open("config.json", "r") as f:
     settings = json.load(f)
 
 w = world.World(settings["World"])
@@ -56,4 +56,4 @@ if "Method" in settings:
         arg_str = settings["MethodArg"]
     mp.method = (settings["Method"], arg_str)
 
-mp.writeFile(sys.argv[2])
+mp.writeFile(settings["Target"])

@@ -1,4 +1,15 @@
+# Output pbrt file
+*.pbrt
+
+# Python
 *.pyc
 __pycache__
 
+# Resource
 block/*.json
+
+
+# pyinstaller
+dist/
+build/
+*.spec

@@ -8,10 +8,18 @@ from biome import Biome
 from pbrtwriter import PbrtWriter
 from player import Player
 
-with open(sys.argv[1], "r") as f:
+with open("config.json", "r") as f:
     settings = json.load(f)
 
-w = world.World(settings["World"])
+from find_minecraft import getMinecraftFolder 
+import os
+
+# current works for client
+world_path = os.path.join(getMinecraftFolder(), "saves", settings["World"])
+
+print("Get world:", world_path)
+
+w = world.World(world_path)
 r = settings["Radius"]
 sz = 2*r+1
 y_range = settings["YRange"]
@@ -19,7 +27,7 @@ ys = list(range(y_range[0], y_range[1]))
 arr = [[[None]*sz for i in range(sz)] for j in ys]
 dv = range(-r, r+1)
 
-player = Player(settings["World"], settings["Player"])
+player = Player(world_path, settings["Player"])
 
 isx, isy, isz = map(int, player.pos)
 sx, sy, sz = player.pos 
@@ -38,7 +46,7 @@ for y, dx, dz in tqdm([(y, dx, dz) for y in ys for dx in dv for dz in dv]):
     name = bs.name[10:]
     arr[y-ys[0]][r + dz][r + dx] = [name, bs.props, biome_id]
 
-model_loader = ModelLoader("/home/master/06/mukyu99/PbrtCraft/mc2pbrt")
+model_loader = ModelLoader(".")
 biome_reader = Biome()
 mp = PbrtWriter(model_loader, biome_reader)
 mp.setBlocks(arr)
@@ -69,4 +77,4 @@ if "Method" in settings:
         arg_str = settings["MethodArg"]
     mp.method = (settings["Method"], arg_str)
 
-mp.writeFile(sys.argv[2])
+mp.writeFile(settings["Target"])

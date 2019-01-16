@@ -143,6 +143,12 @@ class Block:
                     self._addModel(side, [
                         {"type" : "rotate", "axis" : "y", "angle" : 90*mp[k]}
                     ])
+        
+        elif self._is("chest"):
+            pass
+        
+        elif self._is("sign"):
+            pass
 
         elif self.name in ["wheat", "beetroots"]:
             self._addModel(self.name + ("_stage%s" % int(self.state["age"])))
@@ -196,7 +202,7 @@ class Block:
             pass
         elif self.name == "fire":
             self._addModel("fire_floor0")
-
+        
         elif self.name == "end_gateway":
             # TODO
             pass

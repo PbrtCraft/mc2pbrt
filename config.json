@@ -1,0 +1,14 @@
+{
+  "Samples" : 8,
+  "Camera" : "Camera \"perspective\"",
+  "LookatVec" : [48, 13, 48, 48, 13, 0, 0, 1, 0],
+  "World" : "Idea",
+  "Player" : "Mudream",
+  "EnvLight" : "env/aristea_wreck_1k.png",
+  "Method" : "photonmap",
+  "MethodArg" : "\"integer causticphotons\" [100000] \"integer indirectphotons\" [100000] \"integer nused\" [50]",
+  "Radius" : 48,
+  "YRange" : [1, 100],
+  "Origin" : [-97, 74, 72],
+  "Target" : "example.pbrt"
+}
