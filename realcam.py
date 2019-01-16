@@ -14,6 +14,11 @@ with open("config.json", "r") as f:
 from find_minecraft import getMinecraftFolder 
 import os
 
+import resource
+
+if resource.checkModelFolder() == False:
+    resource.copyModelToFolder()
+
 # current works for client
 world_path = os.path.join(getMinecraftFolder(), "saves", settings["World"])
 
