@@ -16,8 +16,7 @@ import os
 
 import resource
 
-if resource.checkModelFolder() == False:
-    resource.copyModelToFolder()
+resource.setup()
 
 # current works for client
 world_path = os.path.join(getMinecraftFolder(), "saves", settings["World"])
@@ -83,4 +82,5 @@ if "Method" in settings:
         arg_str = settings["MethodArg"]
     mp.method = (settings["Method"], arg_str)
 
-mp.writeFile(settings["Target"])
+scenes_path = os.path.join(".", "scenes", settings["Target"])
+mp.writeFile(scenes_path)

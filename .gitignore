@@ -10,6 +10,8 @@ __pycache__
 
 # Resource
 block/*.json
+scenes/block/*.png
+scenes/block/*.png.mcmeta
 
 # pyinstaller
 dist/
