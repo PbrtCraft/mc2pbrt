@@ -1,3 +1,4 @@
+from resource import ResourceManager
 from util import *
 
 class Block:
@@ -48,7 +49,6 @@ class Block:
     def _addModel(self, name, transforms = None):
         mdl = self._getModel(name)
         if not mdl:
-            #eprint("Fail to load model-%s" % name)
             return
         self.models.append((mdl, transforms))
 
@@ -251,7 +251,7 @@ class Block:
                 fout.write('Material "matte" "texture Kd" "%s-color"\n' % tex)
             fout.write('AttributeBegin\n')
             fout.write('  Translate %f %f %f\n' % delta)
-            if hasAlpha(tex + ".png"):
+            if ResourceManager.inst.hasAlpha(tex + ".png"):
                 fout.write('  Shape "%s" "float l1" [%f] "float l2" [%f] ' % (shape, l1, l2) +
                            '  "float dir" [%d] "texture alpha" "%s-alpha"' % (dir_, tex) +
                            '  "float u0" [%f] "float v0" [%f] "float u1" [%f] "float v1" [%f]\n' % uv)
@@ -326,7 +326,6 @@ class Block:
                     face = ele["faces"][facename]
                     tex = face["texture"]
                     if tex[0] == '#':
-                        eprint("Cannot resolve texture.")
-                        exit(1)
+                        raise KeyError("Texture name not resolve")
                     used_texture.add(tex)
         return used_texture

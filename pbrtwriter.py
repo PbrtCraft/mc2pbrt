@@ -4,6 +4,8 @@ from tqdm import tqdm
 from block import Block
 from util import *
 
+from resource import ResourceManager
+
 class WaterSolver:
     def __init__(self, block):
         self.block = block
@@ -189,7 +191,7 @@ class PbrtWriter:
 
         for fn in self.used_texture:
             fout.write('Texture "%s-color" "spectrum" "imagemap" "string filename" "%s.png"\n' % (fn, fn))
-            if hasAlpha(fn + ".png"):
+            if ResourceManager.inst.hasAlpha(fn + ".png"):
                 fout.write('Texture "%s-alpha" "float" "alphamap" "string filename" "%s.png"\n' % (fn, fn))
 
         self._writeEnvLight(fout)

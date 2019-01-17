@@ -1,6 +1,3 @@
-def eprint(msg):
-    sys.stderr.write("[Error] " + msg + "\n")
-
 plus  = lambda p,q : tuple(map(float, [p[i]+q[i] for i in range(3)]))
 minus = lambda p,q : tuple(map(float, [p[i]-q[i] for i in range(3)]))
 mult  = lambda p,f : tuple([float(p[i])*f for i in range(3)]) 
@@ -27,9 +24,3 @@ cullface_map = {
     "north" : (0, 0, 1),
     "south" : (0, 0, -1),
 }
-
-def hasAlpha(fn):
-    return True
-    #from PIL import Image
-    #image = Image.open(fn)
-    #return len(image.mode) == 4

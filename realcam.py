@@ -16,7 +16,7 @@ import os
 
 import resource
 
-resource.setup()
+resource.ResourceManager()
 
 # current works for client
 world_path = os.path.join(getMinecraftFolder(), "saves", settings["World"])
