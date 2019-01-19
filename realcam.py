@@ -1,4 +1,5 @@
-import sys
+import sys, os
+import errno
 import json
 
 import world
@@ -8,18 +9,22 @@ from biome import Biome
 from pbrtwriter import PbrtWriter
 from player import Player
 
-with open("config.json", "r") as f:
-    settings = json.load(f)
-
 from find_minecraft import getMinecraftFolder 
-import os
 
 import resource
 
 resource.ResourceManager()
 
-# current works for client
-world_path = os.path.join(getMinecraftFolder(), "saves", settings["World"])
+with open("config.json", "r") as f:
+    settings = json.load(f)
+
+# World an be a full path or a world folder name
+if os.path.exists(settings["World"]):
+    world_path = settings["World"]
+else:
+    world_path = os.path.join(getMinecraftFolder(), "saves", settings["World"])
+    if not os.path.exists(world_path):
+        raise FileNotFoundError(errno.ENOENT, "World not found.")
 
 print("Get world:", world_path)
 
