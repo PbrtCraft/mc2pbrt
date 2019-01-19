@@ -173,26 +173,24 @@ class PbrtWriter:
         print("Start write file ...")
         self._preloadUsedData()
         fout = open(filename, "w")
-        fout.write("Scale -1 1 1\n")
-
         fout.write('Film "image" "integer xresolution" [960] "integer yresolution" [480]\n')
 
         lookat_vec = self.lookat_vec or (self.X/2, 4, self.Z/2+1, self.X/2, 4, 0, 0, 1, 0)
-        fout.write('LookAt %f %f %f  %f %f %f %f %f %f\n' % self.lookat_vec) 
-        stand_pt = tuple(map(int, self.lookat_vec[:3]))
+        fout.write('LookAt %f %f %f  %f %f %f %f %f %f\n' % lookat_vec) 
+        stand_pt = tuple(map(int, lookat_vec[:3]))
 
         camera_cmd = self.camera_cmd or 'Camera "environment"'
         fout.write(camera_cmd + "\n")
 
-        fout.write('SurfaceIntegrator "%s" %s\n' % self.method)
-        fout.write('Sampler "bestcandidate" "integer pixelsamples" [%d]\n' % self.samples)
+        fout.write('Integrator "%s" %s\n' % self.method)
+        fout.write('Sampler "lowdiscrepancy" "integer pixelsamples" [%d]\n' % self.samples)
 
         fout.write('WorldBegin\n')
 
         for fn in self.used_texture:
             fout.write('Texture "%s-color" "spectrum" "imagemap" "string filename" "%s.png"\n' % (fn, fn))
-            if ResourceManager.inst.hasAlpha(fn + ".png"):
-                fout.write('Texture "%s-alpha" "float" "alphamap" "string filename" "%s.png"\n' % (fn, fn))
+            #if ResourceManager.inst.hasAlpha(fn + ".png"):
+            #    fout.write('Texture "%s-alpha" "float" "alphamap" "string filename" "%s.png"\n' % (fn, fn))
 
         self._writeEnvLight(fout)
         
