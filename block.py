@@ -251,14 +251,14 @@ class Block:
                 fout.write('Material "matte" "texture Kd" "%s-color"\n' % tex)
             fout.write('AttributeBegin\n')
             fout.write('  Translate %f %f %f\n' % delta)
-            #if ResourceManager.inst.hasAlpha(tex + ".png"):
-            #    fout.write('  Shape "%s" "float l1" [%f] "float l2" [%f] ' % (shape, l1, l2) +
-            #               '  "float dir" [%d] "texture alpha" "%s-alpha"' % (dir_, tex) +
-            #               '  "float u0" [%f] "float v0" [%f] "float u1" [%f] "float v1" [%f]\n' % uv)
-            #else:
-            fout.write('  Shape "%s" "float l1" [%f] "float l2" [%f] ' % (shape, l1, l2) +
-                       '  "float dir" [%d] ' % (dir_, ) +
-                       '  "float u0" [%f] "float v0" [%f] "float u1" [%f] "float v1" [%f]\n' % uv)
+            if ResourceManager.inst.hasAlpha(tex + ".png"):
+                fout.write('  Shape "%s" "float l1" [%f] "float l2" [%f] ' % (shape, l1, l2) +
+                           '  "float dir" [%d] "texture alpha" "%s-alpha"' % (dir_, tex) +
+                           '  "float u0" [%f] "float v0" [%f] "float u1" [%f] "float v1" [%f]\n' % uv)
+            else:
+                fout.write('  Shape "%s" "float l1" [%f] "float l2" [%f] ' % (shape, l1, l2) +
+                           '  "float dir" [%d] ' % (dir_, ) +
+                           '  "float u0" [%f] "float v0" [%f] "float u1" [%f] "float v1" [%f]\n' % uv)
             fout.write('AttributeEnd\n')
 
         fout.write('AttributeEnd\n')

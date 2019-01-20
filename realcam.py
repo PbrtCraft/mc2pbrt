@@ -65,11 +65,10 @@ map_eye_y = sy+1.8-y_range[0]
 
 from math import cos, sin, pi
 theta, phi = player.rot
-phi = -phi
+theta, phi = -theta/180*pi, -phi/180*pi
 tx, ty, tz = sin(theta)*cos(phi), sin(phi), cos(theta)*cos(phi)
 phi += pi/2
 nx, ny, nz = sin(theta)*cos(phi), sin(phi), cos(theta)*cos(phi)
-nx, ny, nz = 0, 1, 0
 mp.lookat_vec = (r, map_eye_y, r, r + tx, map_eye_y + ty, r + tz, nx, ny, nz) 
 
 if "Samples" in settings:

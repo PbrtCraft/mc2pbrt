@@ -142,7 +142,7 @@ class PbrtWriter:
         self.camera_cmd = None
         self.lookat_vec = None
         self.samples = 16
-        self.method = ("photonmap", "")
+        self.method = ("sppm", "")
 
         self.envlight = None 
 
@@ -173,6 +173,11 @@ class PbrtWriter:
         print("Start write file ...")
         self._preloadUsedData()
         fout = open(filename, "w")
+        
+        # The coordinate system of minecraft and pbrt is different.
+        # Pbrt is lefthand base, while minecraft is righthand base.
+        fout.write("Scale -1 1 1\n")
+
         fout.write('Film "image" "integer xresolution" [960] "integer yresolution" [480]\n')
 
         lookat_vec = self.lookat_vec or (self.X/2, 4, self.Z/2+1, self.X/2, 4, 0, 0, 1, 0)
@@ -189,8 +194,8 @@ class PbrtWriter:
 
         for fn in self.used_texture:
             fout.write('Texture "%s-color" "spectrum" "imagemap" "string filename" "%s.png"\n' % (fn, fn))
-            #if ResourceManager.inst.hasAlpha(fn + ".png"):
-            #    fout.write('Texture "%s-alpha" "float" "alphamap" "string filename" "%s.png"\n' % (fn, fn))
+            if ResourceManager.inst.hasAlpha(fn + ".png"):
+                fout.write('Texture "%s-alpha" "float" "imagemap" "bool alpha" "true" "string filename" "%s.png"\n' % (fn, fn))
 
         self._writeEnvLight(fout)
         
