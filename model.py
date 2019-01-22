@@ -69,7 +69,5 @@ class ModelLoader:
                                 uv[i] /= 16.
                         # swap UV
                         uv = [uv[1], uv[0], uv[3], uv[2]]
-                        # swap V
-                        uv[0], uv[2] = uv[2], uv[0]
                         face["uv"] = tuple(uv)
         return self.db[name]

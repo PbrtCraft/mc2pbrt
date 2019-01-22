@@ -78,18 +78,71 @@ class LightSolver:
         self.Z = len(self.block[0])
         self.X = len(self.block[0][0])
 
+        # Full light energy for light level 15 
+        self.full_light = 5.
+        
+        self.normal_light_map = {
+            "beacon" : 15,
+            "end_portal" : 15,
+            "fire" : 15,
+            "glowstone" : 15,
+            "jack_o_lantern" : 15,
+            "lava" : 15,
+            "sea_lantern" : 15,
+            "conduit" : 15,
+            "end_rod" : 14,
+            "torch" : 14,
+            "torch_wall" : 14,
+            "nether_portal" : 11,
+            "ender_chest" : 7,
+            "magma_block" : 3,
+            "brewing_stand" : 1,
+            "brown_mushroom" : 1,
+            "dragon_egg" : 1,
+            "end_portal_frame" : 1,
+        }
+
+        # Sea pickle's light
+        def sea_pickle(b):
+            if b.state["waterlogged"] == "false":
+                return 0
+            return [0, 6, 9, 12, 15][int(b.state["pickles"])]
+        
+        # Return a lambda that just determine whether the block's "lit" is on
+        lit = lambda l: (lambda b: [0, l][b.state["lit"] == "true"])
+
+        self.condition_light_map = {
+            "sea_pickle" : sea_pickle,
+            "furnace" : lit(13),
+            "redstone_ore" : lit(9),
+            "redstone_lamp" : lit(15), 
+            "redstone_torch" : lit(7),
+        }
+
+    def getLight(self, b):
+        if b.name in self.normal_light_map:
+            return self.normal_light_map[b.name]
+
+        if b.name in self.condition_light_map:
+            return self.condition_light_map[b.name](b)
+
+        return 0
+
     def render(self, fout):
         print("Writing lights...")
         for x,y,z in tqdm([(x, y, z) for x in range(self.X) for y in range(self.Y) for z in range(self.Z)],
                           ascii=True):
             pt = (x, y, z)
             b = self.block[y][z][x]
-            if b.isLight():
-                fout.write("AttributeBegin\n")
-                fout.write('AreaLightSource "diffuse" "rgb L" [ .5 .5 .5 ]\n')
-                fout.write('Translate %f %f %f\n' % pt)
-                self.block[y][z][x].render(fout)
-                fout.write("AttributeEnd\n")
+            light = self.getLight(b)
+            if light == 0: continue
+
+            le = (light/15.)**2*self.full_light
+            fout.write("AttributeBegin\n")
+            fout.write('AreaLightSource "diffuse" "rgb L" [ %f %f %f ]\n' % (le, le, le))
+            fout.write('Translate %f %f %f\n' % pt)
+            self.block[y][z][x].render(fout)
+            fout.write("AttributeEnd\n")
 
 
 class BlockSolver:
@@ -124,7 +177,7 @@ class BlockSolver:
 
             # shouldn't render light as a block
             # light solver should deal with it
-            if not b.isLight():
+            if True: 
                 fout.write('Translate %f %f %f\n' % pt)
                 cnt += b.render(fout)
                 fout.write('Translate %f %f %f\n' % mult(pt, -1))
@@ -165,7 +218,7 @@ class PbrtWriter:
         if not self.envlight : return
         fout.write('AttributeBegin\n')
         fout.write('    Rotate 270 1 0 0 \n')
-        fout.write('    LightSource "infinite" "integer nsamples" [4] "rgb L" [1 1 1]' + 
+        fout.write('    LightSource "infinite" "integer nsamples" [16] "rgb L" [1 1 1]' + 
                        '"string mapname" ["%s"]\n' % self.envlight)
         fout.write('AttributeEnd\n')
 

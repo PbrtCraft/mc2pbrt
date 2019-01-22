@@ -22,15 +22,8 @@ class Block:
             "wood"
         ]
 
-        self.light_block = set([
-            "torch", "jack_o_lantern", "redstone_lamp"
-        ])
-
     def _is(self, y):
         return self.name == y or self.name[-len(y)-1:] == "_" + y
-
-    def isLight(self):
-        return self.name in self.light_block
 
     def canPass(self):
         if self.name in self.solid_block:
