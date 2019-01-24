@@ -13,10 +13,16 @@ class ResourceManager:
         self.local_texture_folder = os.path.join(".", "scenes", "block")
         self.setup()
 
+        self.table_alpha = {}
+
     def hasAlpha(self, texture_fn):
-        full_filename = os.path.join(self.local_texture_folder, "..", texture_fn) 
-        image = Image.open(full_filename)
-        return len(image.mode) == 4
+        """Check if texture file has alpha channel"""
+        if texture_fn not in self.table_alpha:
+            full_filename = os.path.join(self.local_texture_folder, "..", texture_fn) 
+            image = Image.open(full_filename)
+            self.table_alpha[texture_fn] = len(image.mode) == 4
+
+        return self.table_alpha[texture_fn]
 
     def setup(self):
         """

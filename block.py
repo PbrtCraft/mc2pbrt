@@ -2,6 +2,15 @@ from resource import ResourceManager
 from util import *
 
 class Block:
+    SOLID_BLOCK = set([ 
+        "stone", "podzol", "clay",
+    ])
+    SOLID_TYPE = [
+        "ore", "granite", "diorite", "andesite", "planks", "dirt", "block",
+        "wood"
+    ]
+    LONG_PLANT = set(["tall_seagrass", "sunflower", "lilac", "rose_bush", 
+                      "peony", "tall_grass", "large_fern"])
     def __init__(self, name, state, biome_id, model_loader, biome_reader):
         self.name = name
         self.state = state
@@ -13,22 +22,13 @@ class Block:
         
         self._build()
 
-        self.solid_block = set([
-            "stone", "podzol", "clay",
-        ])
-
-        self.solid_type = [
-            "ore", "granite", "diorite", "andesite", "planks", "dirt", "block",
-            "wood"
-        ]
-
     def _is(self, y):
         return self.name == y or self.name[-len(y)-1:] == "_" + y
 
     def canPass(self):
-        if self.name in self.solid_block:
+        if self.name in Block.SOLID_BLOCK:
             return False
-        for t in self.solid_type:
+        for t in Block.SOLID_TYPE:
             if self._is(t):
                 return False
         return True
@@ -51,10 +51,8 @@ class Block:
         elif self.name.find("bed") != -1:
             return
 
-        long_plant = set(["tall_seagrass", "sunflower", "lilac", "rose_bush", 
-                          "peony", "tall_grass", "large_fern"])
 
-        if self._is("door") or self.name in long_plant:
+        if self._is("door") or self.name in Block.LONG_PLANT:
             if self.state["half"] == "lower":
                 self._addModel(self.name + "_bottom")
             elif self.state["half"] == "upper":
