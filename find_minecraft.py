@@ -1,4 +1,5 @@
-import os, sys
+import os
+import sys
 import errno
 
 def getMinecraftFolder():
@@ -12,10 +13,10 @@ def getMinecraftFolder():
         minecraft_dir = os.path.join(os.environ['HOME'], ".minecraft")
         if not os.path.exists(minecraft_dir) and sys.platform.startswith("darwin"):
             # For Mac:
-            minecraft_dir = os.path.join(os.environ['HOME'], "Library", "Application Support", "minecraft")
+            minecraft_dir = os.path.join(os.environ['HOME'], "Library", "Application Support",
+                                         "minecraft")
 
     if not minecraft_dir:
         raise FileNotFoundError(errno.ENOENT, "Minecraft folder not found.")
 
     return minecraft_dir
-

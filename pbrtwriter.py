@@ -1,4 +1,3 @@
-import sys
 from tqdm import tqdm
 
 from block import Block
@@ -7,6 +6,8 @@ from util import *
 from resource import ResourceManager
 
 class WaterSolver:
+    """Write the water in then scene."""
+
     def __init__(self, block):
         self.block = block
         self.Y = len(self.block)
@@ -21,8 +22,8 @@ class WaterSolver:
 
     def _build(self):
         print("Building water level...")
-        for x,y,z in tqdm([(x, y, z) for x in range(self.X) for y in range(self.Y) for z in range(self.Z)],
-                          ascii=True):
+        for x, y, z in tqdm([(x, y, z) for x in range(self.X) for y in range(self.Y) for z in range(self.Z)],
+                            ascii=True):
             b = self.block[y][z][x]
             if b.name == "water" or b.name == "flowing_water":
                 self.level[y][z][x] = int(b.state["level"])
@@ -31,8 +32,8 @@ class WaterSolver:
                     self.level[y][z][x] = 0
             elif b._is("seagrass") or b.name == "kelp_plant":
                 self.level[y][z][x] = 0
-            
-    
+
+
     def _level2height(self, l):
         if l >= 8: return 1.
         if l == 0: return 1. - self.eps
@@ -40,9 +41,9 @@ class WaterSolver:
 
     def getLevel(self, pt):
         x, y, z = pt
-        if x < 0 or x >= self.X : return None
-        if y < 0 or y >= self.Y : return None
-        if z < 0 or z >= self.Z : return None
+        if x < 0 or x >= self.X: return None
+        if y < 0 or y >= self.Y: return None
+        if z < 0 or z >= self.Z: return None
         return self.level[y][z][x]
 
     def getHeight(self, pt):
@@ -61,8 +62,8 @@ class WaterSolver:
     def render(self, fout):
         print("Writing water blocks...")
         fout.write('Material "glass" "float eta" [1.33] "rgb Kt" [.28 .72 1]\n')
-        for x,y,z in tqdm([(x, y, z) for x in range(self.X) for y in range(self.Y) for z in range(self.Z)],
-                          ascii=True):
+        for x, y, z in tqdm([(x, y, z) for x in range(self.X) for y in range(self.Y) for z in range(self.Z)],
+                            ascii=True):
             if self.level[y][z][x] == None: continue
             pt = (x, y, z)
             h = self._level2height(self.level[y][z][x])
@@ -80,20 +81,20 @@ class WaterSolver:
                     hs[i] = self.getHeight((x+dt[i][1], y, z+dt[i][0]))
 
                 ps = [[0, 1, 3, 4], [1, 4], [1, 2, 4, 5],
-                      [3, 4],       [4],    [4, 5],
+                      [3, 4], [4], [4, 5],
                       [3, 4, 6, 7], [4, 7], [4, 5, 7, 8]]
 
-                ps = [self.calAvg(map(lambda x:hs[x], p)) for p in ps]
+                ps = [self.calAvg(map(lambda x: hs[x], p)) for p in ps]
 
-            if self.getLevel((x, y+1, z)) == None:
+            if self.getLevel((x, y+1, z)) is None:
                 from math import pi
                 fout.write('AttributeBegin\n')
                 fout.write('  Translate -.5 0 -.5\n')
-                fout.write('  Shape "heightfield" "integer nv" [3] "integer nu" [3]\n' + 
+                fout.write('  Shape "heightfield" "integer nv" [3] "integer nu" [3]\n' +
                            '  "float Py" [%f %f %f %f %f %f %f %f %f]' % tuple(ps))
                 fout.write('AttributeEnd\n')
 
-            if self.getLevel((x, y-1, z)) == None:
+            if self.getLevel((x, y-1, z)) is None:
                 fout.write('Shape "quady"\n')
 
             def param(pts):
@@ -108,7 +109,7 @@ class WaterSolver:
                 fout.write('  Shape "trianglemesh" "point P" %s ' % param(pts) +
                            '  "integer indices" %s' % param(inds))
                 fout.write('AttributeEnd\n')
-            
+
             def rev(inds):
                 ret = list(inds)
                 for i in range(len(ret)):
@@ -116,36 +117,36 @@ class WaterSolver:
                     ret[i] = (tri[0], tri[2], tri[1])
                 return ret
 
-            indx = [(0, 1, 2), (1, 3, 2), (2, 3, 4), (3, 5, 4)] 
-            if self.getLevel((x-1, y, z)) == None:
+            indx = [(0, 1, 2), (1, 3, 2), (2, 3, 4), (3, 5, 4)]
+            if self.getLevel((x-1, y, z)) is None:
                 pts = [
                     (0, 0, -.5), (0, ps[0], -.5),
-                    (0, 0, 0),   (0, ps[3], 0),
-                    (0, 0, .5),  (0, ps[6], .5),
+                    (0, 0, 0), (0, ps[3], 0),
+                    (0, 0, .5), (0, ps[6], .5),
                 ]
                 trimesh((-.5, 0, 0), pts, rev(indx))
-            
-            if self.getLevel((x+1, y, z)) == None:
+
+            if self.getLevel((x+1, y, z)) is None:
                 pts = [
                     (0, 0, -.5), (0, ps[2], -.5),
-                    (0, 0, 0),   (0, ps[5], 0),
-                    (0, 0, .5),  (0, ps[8], .5),
+                    (0, 0, 0), (0, ps[5], 0),
+                    (0, 0, .5), (0, ps[8], .5),
                 ]
                 trimesh((.5, 0, 0), pts, indx)
 
-            if self.getLevel((x, y, z-1)) == None:
+            if self.getLevel((x, y, z-1)) is None:
                 pts = [
                     (-.5, 0, 0), (-.5, ps[0], 0),
-                    (0, 0, 0),   (0, ps[1], 0),
-                    (.5, 0, 0),  (.5, ps[2], 0),
+                    (0, 0, 0), (0, ps[1], 0),
+                    (.5, 0, 0), (.5, ps[2], 0),
                 ]
                 trimesh((0, 0, -.5), pts, indx)
 
-            if self.getLevel((x, y, z+1)) == None:
+            if self.getLevel((x, y, z+1)) is None:
                 pts = [
                     (-.5, 0, 0), (-.5, ps[6], 0),
-                    (0, 0, 0),   (0, ps[7], 0),
-                    (.5, 0, 0),  (.5, ps[8], 0),
+                    (0, 0, 0), (0, ps[7], 0),
+                    (.5, 0, 0), (.5, ps[8], 0),
                 ]
                 trimesh((0, 0, .5), pts, rev(indx))
 
@@ -153,15 +154,16 @@ class WaterSolver:
 
 
 class LightSolver:
+    """Write the light in the scene."""
     def __init__(self, block):
         self.block = block
         self.Y = len(self.block)
         self.Z = len(self.block[0])
         self.X = len(self.block[0][0])
 
-        # Full light energy for light level 15 
+        # Full light energy for light level 15
         self.full_light = 5.
-        
+
         self.normal_light_map = {
             "beacon" : 15,
             "end_portal" : 15,
@@ -188,7 +190,7 @@ class LightSolver:
             if b.state["waterlogged"] == "false":
                 return 0
             return [0, 6, 9, 12, 15][int(b.state["pickles"])]
-        
+
         # Return a lambda that just determine whether the block's "lit" is on
         lit = lambda l: (lambda b: [0, l][b.state["lit"] == "true"])
 
@@ -196,7 +198,7 @@ class LightSolver:
             "sea_pickle" : sea_pickle,
             "furnace" : lit(13),
             "redstone_ore" : lit(9),
-            "redstone_lamp" : lit(15), 
+            "redstone_lamp" : lit(15),
             "redstone_torch" : lit(7),
         }
 
@@ -211,8 +213,8 @@ class LightSolver:
 
     def render(self, fout):
         print("Writing lights...")
-        for x,y,z in tqdm([(x, y, z) for x in range(self.X) for y in range(self.Y) for z in range(self.Z)],
-                          ascii=True):
+        for x, y, z in tqdm([(x, y, z) for x in range(self.X) for y in range(self.Y) for z in range(self.Z)],
+                            ascii=True):
             pt = (x, y, z)
             b = self.block[y][z][x]
             light = self.getLight(b)
@@ -227,6 +229,8 @@ class LightSolver:
 
 
 class BlockSolver:
+    """Write all solid block in th scene"""
+
     def __init__(self, block):
         self.block = block
         self.Y = len(self.block)
@@ -258,7 +262,7 @@ class BlockSolver:
 
             # shouldn't render light as a block
             # light solver should deal with it
-            if True: 
+            if True:
                 fout.write('Translate %f %f %f\n' % pt)
                 cnt += b.render(fout)
                 fout.write('Translate %f %f %f\n' % mult(pt, -1))
@@ -272,13 +276,14 @@ class PbrtWriter:
     def __init__(self, model_loader, biome_reader):
         self.mldr = model_loader
         self.bdr = biome_reader
-        
+
         self.camera_cmd = None
         self.lookat_vec = None
         self.samples = 16
         self.method = ("sppm", "")
 
-        self.envlight = None 
+        self.envlight = None
+        self.used_texture = set()
 
     def setBlocks(self, block):
         self.block = block
@@ -296,18 +301,18 @@ class PbrtWriter:
                     self.used_texture = self.used_texture | self.block[y][z][x].getUsedTexture()
 
     def _writeEnvLight(self, fout):
-        if not self.envlight : return
+        if not self.envlight: return
         fout.write('AttributeBegin\n')
         fout.write('    Rotate 270 1 0 0 \n')
-        fout.write('    LightSource "infinite" "integer nsamples" [16] "rgb L" [1 1 1]' + 
-                       '"string mapname" ["%s"]\n' % self.envlight)
+        fout.write('    LightSource "infinite" "integer nsamples" [16] "rgb L" [1 1 1]' +
+                   '"string mapname" ["%s"]\n' % self.envlight)
         fout.write('AttributeEnd\n')
 
     def writeFile(self, filename):
         print("Start write file ...")
         self._preloadUsedData()
         fout = open(filename, "w")
-        
+
         # The coordinate system of minecraft and pbrt is different.
         # Pbrt is lefthand base, while minecraft is righthand base.
         fout.write("Scale -1 1 1\n")
@@ -315,7 +320,7 @@ class PbrtWriter:
         fout.write('Film "image" "integer xresolution" [960] "integer yresolution" [480]\n')
 
         lookat_vec = self.lookat_vec or (self.X/2, 4, self.Z/2+1, self.X/2, 4, 0, 0, 1, 0)
-        fout.write('LookAt %f %f %f  %f %f %f %f %f %f\n' % lookat_vec) 
+        fout.write('LookAt %f %f %f  %f %f %f %f %f %f\n' % lookat_vec)
         stand_pt = tuple(map(int, lookat_vec[:3]))
 
         camera_cmd = self.camera_cmd or 'Camera "environment"'
@@ -332,7 +337,7 @@ class PbrtWriter:
                 fout.write('Texture "%s-alpha" "float" "imagemap" "bool alpha" "true" "string filename" "%s.png"\n' % (fn, fn))
 
         self._writeEnvLight(fout)
-        
+
         water_solver = WaterSolver(self.block)
         water_solver.render(fout)
 

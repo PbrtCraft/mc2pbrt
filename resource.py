@@ -1,9 +1,9 @@
-from find_minecraft import getMinecraftFolder
 import os, shutil
 import tempfile
 import zipfile
 from tqdm import tqdm
 from PIL import Image
+from find_minecraft import getMinecraftFolder
 
 class ResourceManager:
     inst = None
@@ -16,9 +16,15 @@ class ResourceManager:
         self.table_alpha = {}
 
     def hasAlpha(self, texture_fn):
-        """Check if texture file has alpha channel"""
+        """Check if texture file has alpha channel
+
+        Args:
+            texture_fn: filename of texture.
+        Returns:
+            Texture has alpha channel or not.
+        """
         if texture_fn not in self.table_alpha:
-            full_filename = os.path.join(self.local_texture_folder, "..", texture_fn) 
+            full_filename = os.path.join(self.local_texture_folder, "..", texture_fn)
             image = Image.open(full_filename)
             self.table_alpha[texture_fn] = len(image.mode) == 4
 
@@ -42,15 +48,15 @@ class ResourceManager:
         with tempfile.TemporaryDirectory() as temp_dir:
             with zipfile.ZipFile(version_file, 'r') as vzip:
                 vzip.extractall(temp_dir)
-            
-            if not has_model: 
+
+            if not has_model:
                 print("Copy model json files...", )
                 block_model_dir = os.path.join(temp_dir, "assets", "minecraft", "models", "block")
                 for filename in tqdm(os.listdir(block_model_dir), ascii=True):
                     if filename.endswith(".json"):
                         full_filename = os.path.join(block_model_dir, filename)
                         shutil.copy(full_filename, self.local_model_folder)
-            
+
             if not has_texture:
                 print("Copy texture files...")
                 texture_dir = os.path.join(temp_dir, "assets", "minecraft", "textures", "block")
@@ -59,13 +65,22 @@ class ResourceManager:
                     shutil.copy(full_filename, self.local_texture_folder)
 
     def checkModelFolder(self):
-        """Check if the folder has model json file"""
+        """Check if the folder has model json file
+
+        Returns:
+            Model json file is ready or not
+        """
         json_list = [fn for fn in os.listdir(self.local_model_folder) if fn.endswith(".json")]
         # Check with hash function ?
         return len(json_list) > 0
 
     def checkTextureFolder(self):
-        """Check if the folder has texture pngs"""
+        """Check if the folder has texture pngs
+
+        Returns:
+            Texture image file is ready or not
+        """
+
         png_list = [fn for fn in os.listdir(self.local_texture_folder) if fn.endswith(".png")]
         # Check with hash function ?
         return len(png_list) > 0

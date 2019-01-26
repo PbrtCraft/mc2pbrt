@@ -3,7 +3,7 @@ class Player:
         from username_to_uuid import UsernameToUUID
         import nbt, stream, gzip
         utuuid = UsernameToUUID(username)
-        uuid_fn = self._uuid_to_filename(utuuid.get_uuid()) 
+        uuid_fn = self._uuid_to_filename(utuuid.get_uuid())
         player_path = world_path + '/playerdata/' + uuid_fn + ".dat"
         with gzip.open(player_path, mode='rb') as p:
             in_stream = stream.InputStream(p.read())

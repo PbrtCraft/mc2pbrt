@@ -1,7 +1,10 @@
-import sys, os
+import os
 import errno
 import json
+from math import cos, sin, pi
+from tqdm import tqdm
 
+import resource
 import world
 
 from model import ModelLoader
@@ -9,9 +12,7 @@ from biome import Biome
 from pbrtwriter import PbrtWriter
 from player import Player
 
-from find_minecraft import getMinecraftFolder 
-
-import resource
+from find_minecraft import getMinecraftFolder
 
 resource.ResourceManager()
 
@@ -39,7 +40,7 @@ dv = range(-r, r+1)
 player = Player(world_path, settings["Player"])
 
 isx, isy, isz = map(int, player.pos)
-sx, sy, sz = player.pos 
+sx, sy, sz = player.pos
 
 # check origin point
 
@@ -47,7 +48,6 @@ origin = w.get_block((isx, isy, isz)).state.name[10:]
 if origin.find("air") == -1:
     print("[Warning] Origin point is not empty.")
 
-from tqdm import tqdm
 
 for y, dx, dz in tqdm([(y, dx, dz) for y in ys for dx in dv for dz in dv],
                       ascii=True):
@@ -63,13 +63,12 @@ mp.setBlocks(arr)
 
 map_eye_y = sy+1.8-y_range[0]
 
-from math import cos, sin, pi
 theta, phi = player.rot
 theta, phi = -theta/180*pi, -phi/180*pi
 tx, ty, tz = sin(theta)*cos(phi), sin(phi), cos(theta)*cos(phi)
 phi += pi/2
 nx, ny, nz = sin(theta)*cos(phi), sin(phi), cos(theta)*cos(phi)
-mp.lookat_vec = (r, map_eye_y, r, r + tx, map_eye_y + ty, r + tz, nx, ny, nz) 
+mp.lookat_vec = (r, map_eye_y, r, r + tx, map_eye_y + ty, r + tz, nx, ny, nz)
 
 if "Samples" in settings:
     mp.samples = settings["Samples"]

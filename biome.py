@@ -23,10 +23,9 @@ THE POSSIBILITY OF SUCH DAMAGE.
 
 # This code is rewrite from https://github.com/erich666/Mineways/blob/master/Win/biomes.cpp
 
-import json
 from util import *
 
-biomes = [
+BIOMES = [
     ["Ocean",0.500000,0.500000],
     ["Plains",0.800000,0.400000],
     ["Desert",2.000000,0.000000],
@@ -286,7 +285,8 @@ biomes = [
 ]
 
 class Biome:
-    
+    """Calculate biome tint color"""
+
     GRASS_CORNER = [
         (191, 183, 85),
         (128, 180, 151),
@@ -299,19 +299,31 @@ class Biome:
         (26, 191, 0)
     ]
 
-    def __init__(self): 
-        self.biomes = biomes 
+    def __init__(self):
+        self.biomes = BIOMES 
 
     def getBiomeName(self, biome_id):
+        """Get biome name by biome id"""
         return self.biomes[biome_id]
 
     def getFoliageColor(self, biome_id, elevation):
+        """Get foliage color by biome id and height"""
         return self._getColor(biome_id, elevation, Biome.FOLIAGE_CORNER)
 
     def getGrassColor(self, biome_id, elevation):
+        """Get grass color by biome id and height"""
         return self._getColor(biome_id, elevation, Biome.GRASS_CORNER)
 
     def _getColor(self, biome_id, elevation, corner):
+        """Calculate biome color by traingle lerp.
+
+        Args:
+            biome_id: Biome ID
+            evelation: height of block
+            corner: Color of 3 corners of triangle.
+        Returns:
+            (r, g, b)
+        """
         b = self.biomes[biome_id]
         temp = clamp(b[1] - elevation*0.00166667)
         rain = clamp(b[2])*temp

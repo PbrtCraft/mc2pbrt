@@ -2,14 +2,14 @@ from resource import ResourceManager
 from util import *
 
 class Block:
-    SOLID_BLOCK = set([ 
+    SOLID_BLOCK = set([
         "stone", "podzol", "clay",
     ])
     SOLID_TYPE = [
         "ore", "granite", "diorite", "andesite", "planks", "dirt", "block",
         "wood"
     ]
-    LONG_PLANT = set(["tall_seagrass", "sunflower", "lilac", "rose_bush", 
+    LONG_PLANT = set(["tall_seagrass", "sunflower", "lilac", "rose_bush",
                       "peony", "tall_grass", "large_fern"])
     def __init__(self, name, state, biome_id, model_loader, biome_reader):
         self.name = name
@@ -19,7 +19,7 @@ class Block:
         self.biome_id = biome_id
         # [(Model, Transform)]
         self.models = []
-        
+
         self._build()
 
     def _is(self, y):
@@ -35,11 +35,11 @@ class Block:
 
     def _getModel(self, name):
         model = self.ldr.getModel("block/" + name)
-        if "elements" not in model :
+        if "elements" not in model:
             return None
         return model
 
-    def _addModel(self, name, transforms = None):
+    def _addModel(self, name, transforms=None):
         mdl = self._getModel(name)
         if not mdl:
             return
@@ -134,10 +134,10 @@ class Block:
                     self._addModel(side, [
                         {"type" : "rotate", "axis" : "y", "angle" : 90*mp[k]}
                     ])
-        
+
         elif self._is("chest"):
             pass
-        
+
         elif self._is("sign"):
             pass
 
@@ -193,7 +193,7 @@ class Block:
             pass
         elif self.name == "fire":
             self._addModel("fire_floor0")
-        
+
         elif self.name == "end_gateway":
             # TODO
             pass
@@ -206,7 +206,7 @@ class Block:
         to_pt = ele["to"]
         cube = minus(to_pt, from_pt)
         mid = mult(plus(from_pt, to_pt), .5)
-        
+
         fout.write('AttributeBegin\n')
         fout.write('Translate %f %f %f\n' % mid)
         if "rotation" in ele:
@@ -223,7 +223,7 @@ class Block:
             if "rescale" in rot and rot["rescale"]:
                 fout.write("Scale %f %f %f\n" % plus(mult(sxyz[axis], scale), rxyz[axis]))
             fout.write("Translate %f %f %f\n" % org)
-        
+
         for facename in ele["faces"]:
             face = ele["faces"][facename]
             tex = face["texture"]
@@ -233,10 +233,10 @@ class Block:
             l1, l2 = l_f(cube)
             if "tintindex" in face:
                 if self._is("leaves"):
-                    tint_color = self.bdr.getFoliageColor(self.biome_id, 0) 
+                    tint_color = self.bdr.getFoliageColor(self.biome_id, 0)
                 else:
-                    tint_color = self.bdr.getGrassColor(self.biome_id, 0) 
-                fout.write(('Material "matte" "texture Kd" "%s-color"' % tex) + 
+                    tint_color = self.bdr.getGrassColor(self.biome_id, 0)
+                fout.write(('Material "matte" "texture Kd" "%s-color"' % tex) +
                            ('"rgb tintMap" [%f %f %f]\n' % tint_color))
             else:
                 fout.write('Material "matte" "texture Kd" "%s-color"\n' % tex)
@@ -270,9 +270,17 @@ class Block:
         fout.write("Translate %f %f %f\n" % mult(org, -1))
 
     def render(self, fout):
+        """Write file with pbrt format
+        
+        Args:
+            fout: file object
+        Returns:
+            Number of render block(0 or 1)
+        """
+
         if not self.models:
             return 0
-            
+
         fout.write('AttributeBegin\n')
         if "axis" in self.state and self.name != "nether_portal":
             axis = self.state["axis"]
