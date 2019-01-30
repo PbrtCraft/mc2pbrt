@@ -5,7 +5,7 @@ from math import cos, sin, pi
 from tqdm import tqdm
 
 import resource
-import world
+from pyanvil import world
 
 from model import ModelLoader
 from biome import Biome
