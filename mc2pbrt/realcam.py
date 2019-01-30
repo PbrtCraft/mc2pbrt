@@ -10,7 +10,7 @@ from pyanvil import world
 from model import ModelLoader
 from biome import Biome
 from pbrtwriter import PbrtWriter
-from player import Player
+from pyanvil.player import Player
 
 from find_minecraft import getMinecraftFolder
 

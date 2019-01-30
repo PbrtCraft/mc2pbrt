@@ -40,11 +40,3 @@ class Player:
             print("KeyError raised:", e);
 
         return uuid
-
-
-if __name__ == "__main__":
-    with open("test.json", "r") as f:
-        setting = json.load(f)
-
-    p = Player(setting["World"], setting["Player"])
-    print(p.pos, p.rot)

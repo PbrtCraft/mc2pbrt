@@ -1,8 +1,5 @@
 import json
-
-plus  = lambda p,q : tuple(map(float, [p[i]+q[i] for i in range(3)]))
-minus = lambda p,q : tuple(map(float, [p[i]-q[i] for i in range(3)]))
-mult  = lambda p,f : tuple([float(p[i])*f for i in range(3)]) 
+from tuple_calculation import mult 
 
 class ModelLoader:
     def __init__(self, path = "."):
