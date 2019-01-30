@@ -85,5 +85,5 @@ if "Method" in settings:
         arg_str = settings["MethodArg"]
     mp.method = (settings["Method"], arg_str)
 
-scenes_path = os.path.join(".", "scenes", settings["Target"])
+scenes_path = os.path.join("..", "scenes", settings["Target"])
 mp.writeFile(scenes_path)
