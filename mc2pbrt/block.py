@@ -1,6 +1,7 @@
 from resource import ResourceManager
 from util import pt_map
 from tuple_calculation import plus, mult, minus
+from material import Matte, Glass, Light
 
 class Block:
     SOLID_BLOCK = set([
@@ -13,7 +14,6 @@ class Block:
     LONG_PLANT = set(["tall_seagrass", "sunflower", "lilac", "rose_bush",
                       "peony", "tall_grass", "large_fern"])
 
-    FULL_LIGHT = 5
     NORMAL_LIGHT_MAP = {
         "beacon" : 15,
         "end_portal" : 15,
@@ -101,7 +101,15 @@ class Block:
         elif self.name.find("bed") != -1:
             return
 
+        # Setup Material
+        if self._is("glass"):
+            self.material = Glass(self)
+        elif self.getLight():
+            self.material = Light(self)
+        else:
+            self.material = Matte(self)
 
+        # Setup Model
         if self._is("door") or self.name in Block.LONG_PLANT:
             if self.state["half"] == "lower":
                 self._addModel(self.name + "_bottom")
@@ -256,8 +264,6 @@ class Block:
         to_pt = ele["to"]
         cube = minus(to_pt, from_pt)
         mid = mult(plus(from_pt, to_pt), .5)
-        light = self.getLight()
-        le = (light/15.)**2*Block.FULL_LIGHT
 
         fout.write('AttributeBegin\n')
         fout.write('Translate %f %f %f\n' % mid)
@@ -276,10 +282,6 @@ class Block:
                 fout.write("Scale %f %f %f\n" % plus(mult(sxyz[axis], scale), rxyz[axis]))
             fout.write("Translate %f %f %f\n" % org)
 
-        if self._is("glass"):
-            tex = ele["faces"]["up"]["texture"]
-            fout.write('Material "glass" "texture Kr" "%s-color"\n' % tex)
-
         for facename in ele["faces"]:
             face = ele["faces"][facename]
             tex = face["texture"]
@@ -288,23 +290,9 @@ class Block:
             delta = delta_f(cube)
             l1, l2 = l_f(cube)
             fout.write('AttributeBegin\n')
-            if light:
-                fout.write(('AreaLightSource "texlight" "texture L" "%s-color"' % tex) +
-                           '"rgb scale" [%f %f %f]\n' % (le, le, le))
-            elif "tintindex" in face:
-                if self._is("leaves"):
-                    tint_color = self.bdr.getFoliageColor(self.biome_id, 0)
-                else:
-                    tint_color = self.bdr.getGrassColor(self.biome_id, 0)
-                fout.write(('Material "matte" "texture Kd" "%s-color"' % tex) +
-                           ('"rgb tintMap" [%f %f %f]\n' % tint_color))
-            elif self._is("glass"):
-                pass
-            else:
-                fout.write('Material "matte" "texture Kd" "%s-color"\n' % tex)
-
+            self.material.write(fout, face)
             fout.write('  Translate %f %f %f\n' % delta)
-            if ResourceManager.inst.hasAlpha(tex + ".png") and not self._is("glass"):
+            if ResourceManager.inst.hasAlpha(tex + ".png"):
                 fout.write('  Shape "%s" "float l1" [%f] "float l2" [%f] ' % (shape, l1, l2) +
                            '  "float dir" [%d] "texture alpha" "%s-alpha"' % (dir_, tex) +
                            '  "float u0" [%f] "float v0" [%f] "float u1" [%f] "float v1" [%f]\n' % uv)
