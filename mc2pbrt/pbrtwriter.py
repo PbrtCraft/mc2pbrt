@@ -1,9 +1,9 @@
 from tqdm import tqdm
 
 from block import Block
-from util import *
-
 from resource import ResourceManager
+
+from tuple_calculation import plus_i, plus, mult
 
 class WaterSolver:
     """Write the water in then scene."""

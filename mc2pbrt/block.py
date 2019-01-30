@@ -1,5 +1,6 @@
 from resource import ResourceManager
-from util import *
+from util import pt_map
+from tuple_calculation import plus, mult, minus
 
 class Block:
     SOLID_BLOCK = set([

@@ -23,7 +23,8 @@ THE POSSIBILITY OF SUCH DAMAGE.
 
 # This code is rewrite from https://github.com/erich666/Mineways/blob/master/Win/biomes.cpp
 
-from util import *
+from tuple_calculation import plus, mult
+from util import clamp
 
 BIOMES = [
     ["Ocean",0.500000,0.500000],
