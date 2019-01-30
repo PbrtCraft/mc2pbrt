@@ -275,6 +275,10 @@ class Block:
                 fout.write("Scale %f %f %f\n" % plus(mult(sxyz[axis], scale), rxyz[axis]))
             fout.write("Translate %f %f %f\n" % org)
 
+        if self._is("glass"):
+            tex = ele["faces"]["up"]["texture"]
+            fout.write('Material "glass" "texture Kr" "%s-color"\n' % tex)
+
         for facename in ele["faces"]:
             face = ele["faces"][facename]
             tex = face["texture"]
@@ -293,11 +297,13 @@ class Block:
                     tint_color = self.bdr.getGrassColor(self.biome_id, 0)
                 fout.write(('Material "matte" "texture Kd" "%s-color"' % tex) +
                            ('"rgb tintMap" [%f %f %f]\n' % tint_color))
+            elif self._is("glass"):
+                pass
             else:
                 fout.write('Material "matte" "texture Kd" "%s-color"\n' % tex)
 
             fout.write('  Translate %f %f %f\n' % delta)
-            if ResourceManager.inst.hasAlpha(tex + ".png"):
+            if ResourceManager.inst.hasAlpha(tex + ".png") and not self._is("glass"):
                 fout.write('  Shape "%s" "float l1" [%f] "float l2" [%f] ' % (shape, l1, l2) +
                            '  "float dir" [%d] "texture alpha" "%s-alpha"' % (dir_, tex) +
                            '  "float u0" [%f] "float v0" [%f] "float u1" [%f] "float v1" [%f]\n' % uv)
