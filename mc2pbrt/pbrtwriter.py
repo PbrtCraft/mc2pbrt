@@ -196,8 +196,7 @@ class BlockSolver:
 
 
 class PbrtWriter:
-    def __init__(self, model_loader, biome_reader):
-        self.mldr = model_loader
+    def __init__(self, biome_reader):
         self.bdr = biome_reader
 
         self.camera_cmd = None
@@ -220,7 +219,7 @@ class PbrtWriter:
             for y in range(self.Y):
                 for z in range(self.Z):
                     d = self.block[y][z][x]
-                    self.block[y][z][x] = Block(d[0], d[1], d[2], self.mldr, self.bdr)
+                    self.block[y][z][x] = Block(d[0], d[1], d[2], self.bdr)
                     self.used_texture = self.used_texture | self.block[y][z][x].getUsedTexture()
 
     def _writeEnvLight(self, fout):
@@ -256,7 +255,7 @@ class PbrtWriter:
 
         for fn in self.used_texture:
             fout.write('Texture "%s-color" "spectrum" "imagemap" "string filename" "%s.png"\n' % (fn, fn))
-            if ResourceManager.inst.hasAlpha(fn + ".png"):
+            if ResourceManager().hasAlpha(fn + ".png"):
                 fout.write('Texture "%s-alpha" "float" "imagemap" "bool alpha" "true" "string filename" "%s.png"\n' % (fn, fn))
 
         self._writeEnvLight(fout)

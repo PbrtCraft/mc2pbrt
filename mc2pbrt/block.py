@@ -3,6 +3,8 @@ from util import pt_map
 from tuple_calculation import plus, mult, minus
 from material import Matte, Glass, Light
 
+from resource import ResourceManager
+
 class Block:
     SOLID_BLOCK = set([
         "stone", "podzol", "clay",
@@ -52,10 +54,9 @@ class Block:
         "redstone_torch" : lit(7),
     }
     
-    def __init__(self, name, state, biome_id, model_loader, biome_reader):
+    def __init__(self, name, state, biome_id, biome_reader):
         self.name = name
         self.state = state
-        self.ldr = model_loader
         self.bdr = biome_reader
         self.biome_id = biome_id
         # [(Model, Transform)]
@@ -84,7 +85,7 @@ class Block:
         return True
 
     def _getModel(self, name):
-        model = self.ldr.getModel("block/" + name)
+        model = ResourceManager().model_loader.getModel("block/" + name)
         if "elements" not in model:
             return None
         return model
@@ -292,7 +293,7 @@ class Block:
             fout.write('AttributeBegin\n')
             self.material.write(fout, face)
             fout.write('  Translate %f %f %f\n' % delta)
-            if ResourceManager.inst.hasAlpha(tex + ".png"):
+            if ResourceManager().hasAlpha(tex + ".png"):
                 fout.write('  Shape "%s" "float l1" [%f] "float l2" [%f] ' % (shape, l1, l2) +
                            '  "float dir" [%d] "texture alpha" "%s-alpha"' % (dir_, tex) +
                            '  "float u0" [%f] "float v0" [%f] "float u1" [%f] "float v1" [%f]\n' % uv)

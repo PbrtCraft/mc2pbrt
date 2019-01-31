@@ -4,17 +4,13 @@ import json
 from math import cos, sin, pi
 from tqdm import tqdm
 
-import resource
 from pyanvil import world
 
-from model import ModelLoader
 from biome import Biome
 from pbrtwriter import PbrtWriter
 from pyanvil.player import Player
 
 from find_minecraft import getMinecraftFolder
-
-resource.ResourceManager()
 
 with open("config.json", "r") as f:
     settings = json.load(f)
@@ -32,8 +28,7 @@ print("Get world:", world_path)
 w = world.World(world_path)
 r = settings["Radius"]
 sz = 2*r+1
-y_range = settings["YRange"]
-ys = list(range(y_range[0], y_range[1]))
+ys = list(range(1, 256))
 arr = [[[None]*sz for i in range(sz)] for j in ys]
 dv = range(-r, r+1)
 
@@ -56,12 +51,11 @@ for y, dx, dz in tqdm([(y, dx, dz) for y in ys for dx in dv for dz in dv],
     name = bs.name[10:]
     arr[y-ys[0]][r + dz][r + dx] = [name, bs.props, biome_id]
 
-model_loader = ModelLoader(".")
 biome_reader = Biome()
-mp = PbrtWriter(model_loader, biome_reader)
+mp = PbrtWriter(biome_reader)
 mp.setBlocks(arr)
 
-map_eye_y = sy+1.8-y_range[0]
+map_eye_y = sy+1.8-1
 
 theta, phi = player.rot
 theta, phi = -theta/180*pi, -phi/180*pi
