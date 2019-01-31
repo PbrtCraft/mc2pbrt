@@ -196,9 +196,7 @@ class BlockSolver:
 
 
 class PbrtWriter:
-    def __init__(self, biome_reader):
-        self.bdr = biome_reader
-
+    def __init__(self):
         self.camera_cmd = None
         self.lookat_vec = None
         self.samples = 16
@@ -219,7 +217,7 @@ class PbrtWriter:
             for y in range(self.Y):
                 for z in range(self.Z):
                     d = self.block[y][z][x]
-                    self.block[y][z][x] = Block(d[0], d[1], d[2], self.bdr)
+                    self.block[y][z][x] = Block(d[0], d[1], d[2])
                     self.used_texture = self.used_texture | self.block[y][z][x].getUsedTexture()
 
     def _writeEnvLight(self, fout):

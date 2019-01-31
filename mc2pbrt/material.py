@@ -1,3 +1,5 @@
+import biome
+
 class Matte:
     def __init__(self, block):
         self.block = block
@@ -6,9 +8,9 @@ class Matte:
         tex = face["texture"]
         if "tintindex" in face:
             if self.block._is("leaves"):
-                tint_color = self.block.bdr.getFoliageColor(self.block.biome_id, 0)
+                tint_color = biome.getFoliageColor(self.block.biome_id, 0)
             else:
-                tint_color = self.block.bdr.getGrassColor(self.block.biome_id, 0)
+                tint_color = biome.getGrassColor(self.block.biome_id, 0)
             fout.write(('Material "matte" "texture Kd" "%s-color"' % tex) +
                        ('"rgb tintMap" [%f %f %f]\n' % tint_color))
         else:

@@ -6,7 +6,6 @@ from tqdm import tqdm
 
 from pyanvil import world
 
-from biome import Biome
 from pbrtwriter import PbrtWriter
 from pyanvil.player import Player
 
@@ -51,8 +50,7 @@ for y, dx, dz in tqdm([(y, dx, dz) for y in ys for dx in dv for dz in dv],
     name = bs.name[10:]
     arr[y-ys[0]][r + dz][r + dx] = [name, bs.props, biome_id]
 
-biome_reader = Biome()
-mp = PbrtWriter(biome_reader)
+mp = PbrtWriter()
 mp.setBlocks(arr)
 
 map_eye_y = sy+1.8-1

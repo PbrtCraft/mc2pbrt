@@ -285,53 +285,47 @@ BIOMES = [
     ["Unknown Biome",0.800000,0.400000],
 ]
 
-class Biome:
-    """Calculate biome tint color"""
+GRASS_CORNER = [
+    (191, 183, 85),
+    (128, 180, 151),
+    (71, 205, 51)
+]
 
-    GRASS_CORNER = [
-        (191, 183, 85),
-        (128, 180, 151),
-        (71, 205, 51)
-    ]
+FOLIAGE_CORNER = [
+    (174, 164, 42),
+    (96, 161, 123),
+    (26, 191, 0)
+]
 
-    FOLIAGE_CORNER = [
-        (174, 164, 42),
-        (96, 161, 123),
-        (26, 191, 0)
-    ]
+def getBiomeName(biome_id):
+    """Get biome name by biome id"""
+    return BIOMES[biome_id]
 
-    def __init__(self):
-        self.biomes = BIOMES 
+def getFoliageColor(biome_id, elevation):
+    """Get foliage color by biome id and height"""
+    return _getColor(biome_id, elevation, FOLIAGE_CORNER)
 
-    def getBiomeName(self, biome_id):
-        """Get biome name by biome id"""
-        return self.biomes[biome_id]
+def getGrassColor(biome_id, elevation):
+    """Get grass color by biome id and height"""
+    return _getColor(biome_id, elevation, GRASS_CORNER)
 
-    def getFoliageColor(self, biome_id, elevation):
-        """Get foliage color by biome id and height"""
-        return self._getColor(biome_id, elevation, Biome.FOLIAGE_CORNER)
+def _getColor(biome_id, elevation, corner):
+    """Calculate biome color by traingle lerp.
 
-    def getGrassColor(self, biome_id, elevation):
-        """Get grass color by biome id and height"""
-        return self._getColor(biome_id, elevation, Biome.GRASS_CORNER)
-
-    def _getColor(self, biome_id, elevation, corner):
-        """Calculate biome color by traingle lerp.
-
-        Args:
-            biome_id: Biome ID
-            evelation: height of block
-            corner: Color of 3 corners of triangle.
-        Returns:
-            (r, g, b)
-        """
-        b = self.biomes[biome_id]
-        temp = clamp(b[1] - elevation*0.00166667)
-        rain = clamp(b[2])*temp
-        alpha = [temp-rain, 1-temp, rain]
-        ret_color = (0., 0., 0.)
-        for i in range(3):
-            ret_color = plus(ret_color, mult(corner[i], alpha[i]))
-        ret_color = mult(ret_color, 1./255)
-        ret_color = tuple(map(clamp, ret_color))
-        return ret_color
+    Args:
+        biome_id: Biome ID
+        evelation: height of block
+        corner: Color of 3 corners of triangle.
+    Returns:
+        (r, g, b)
+    """
+    b = BIOMES[biome_id]
+    temp = clamp(b[1] - elevation*0.00166667)
+    rain = clamp(b[2])*temp
+    alpha = [temp-rain, 1-temp, rain]
+    ret_color = (0., 0., 0.)
+    for i in range(3):
+        ret_color = plus(ret_color, mult(corner[i], alpha[i]))
+    ret_color = mult(ret_color, 1./255)
+    ret_color = tuple(map(clamp, ret_color))
+    return ret_color

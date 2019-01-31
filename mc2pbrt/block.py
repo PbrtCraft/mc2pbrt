@@ -54,10 +54,9 @@ class Block:
         "redstone_torch" : lit(7),
     }
     
-    def __init__(self, name, state, biome_id, biome_reader):
+    def __init__(self, name, state, biome_id):
         self.name = name
         self.state = state
-        self.bdr = biome_reader
         self.biome_id = biome_id
         # [(Model, Transform)]
         self.models = []
