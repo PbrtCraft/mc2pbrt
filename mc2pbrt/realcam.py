@@ -7,7 +7,7 @@ from pyanvil import world
 
 from pyanvil.player import Player
 from pbrtwriter import PbrtWriter
-from block import Block
+from block import BlockCreator
 
 from find_minecraft import getMinecraftFolder
 from util import tqdmpos
@@ -47,7 +47,7 @@ for y, dx, dz in tqdmpos(ys, dv, dv):
     bs = w.get_block((isx+dx, y, isz+dz)).state
     biome_id = w.get_biome((isx+dx, y, isz+dz))
     name = bs.name[10:]
-    arr[y-ys[0]][r + dz][r + dx] = Block(name, bs.props, biome_id)
+    arr[y-ys[0]][r + dz][r + dx] = BlockCreator()(name, bs.props, biome_id)
 
 mp = PbrtWriter()
 mp.setBlocks(arr)

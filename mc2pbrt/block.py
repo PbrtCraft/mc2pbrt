@@ -3,7 +3,19 @@ from util import pt_map
 from tuple_calculation import plus, mult, minus
 from material import Matte, Glass, Light
 
-from resource import ResourceManager
+from util import singleton
+
+@ singleton
+class BlockCreator:
+    def __init__(self):
+        self.db = {}
+
+    def __call__(self, name, state, biome_id):
+        key = (name, tuple(sorted(state.items())), biome_id)
+        if key not in self.db:
+            self.db[key] = Block(name, state, biome_id)
+        return self.db[key]
+
 
 class Block:
     SOLID_BLOCK = set([

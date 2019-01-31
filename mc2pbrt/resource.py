@@ -8,15 +8,7 @@ from PIL import Image
 
 from tuple_calculation import mult 
 from find_minecraft import getMinecraftFolder
-
-def singleton(clz):
-    instances = {}
-    def getinstance(*args, **kwargs):
-        if clz not in instances:
-            instances[clz] = clz(*args, **kwargs)
-        return instances[clz]
-    return getinstance
-
+from util import singleton
 
 @singleton
 class ResourceManager:

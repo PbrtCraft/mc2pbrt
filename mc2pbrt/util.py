@@ -1,5 +1,13 @@
 from tqdm import tqdm
 
+def singleton(clz):
+    instances = {}
+    def getinstance(*args, **kwargs):
+        if clz not in instances:
+            instances[clz] = clz(*args, **kwargs)
+        return instances[clz]
+    return getinstance
+
 def clamp(x, a=0., b=1.):
     """Limit value into [a, b]"""
     return max(min(x, b), a)
