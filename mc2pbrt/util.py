@@ -1,6 +1,19 @@
+from tqdm import tqdm
+
 def clamp(x, a=0., b=1.):
     """Limit value into [a, b]"""
     return max(min(x, b), a)
+
+def tqdmpos(valx, valy, valz):
+    total = len(valx)*len(valy)*len(valz)
+    def ziptuple():
+        for x in valx:
+            for y in valy:
+                for z in valz:
+                    yield (x, y, z)
+
+    for pos in tqdm(ziptuple(), total=total, ascii=True):
+        yield pos
 
 pt_map = {
     "east"  : (lambda c: (c[0]/2, 0, 0), lambda c: (c[1], c[2]), 1, "quadx"),

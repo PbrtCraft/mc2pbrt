@@ -1,5 +1,3 @@
-from tqdm import tqdm
-
 from block import Block
 from resource import ResourceManager
 from water import WaterSolver

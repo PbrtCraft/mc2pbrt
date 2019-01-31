@@ -2,7 +2,6 @@ import os
 import errno
 import json
 from math import cos, sin, pi
-from tqdm import tqdm
 
 from pyanvil import world
 
@@ -11,6 +10,7 @@ from pbrtwriter import PbrtWriter
 from block import Block
 
 from find_minecraft import getMinecraftFolder
+from util import tqdmpos
 
 with open("config.json", "r") as f:
     settings = json.load(f)
@@ -43,9 +43,7 @@ origin = w.get_block((isx, isy, isz)).state.name[10:]
 if origin.find("air") == -1:
     print("[Warning] Origin point is not empty.")
 
-
-for y, dx, dz in tqdm([(y, dx, dz) for y in ys for dx in dv for dz in dv],
-                      ascii=True):
+for y, dx, dz in tqdmpos(ys, dv, dv):
     bs = w.get_block((isx+dx, y, isz+dz)).state
     biome_id = w.get_biome((isx+dx, y, isz+dz))
     name = bs.name[10:]

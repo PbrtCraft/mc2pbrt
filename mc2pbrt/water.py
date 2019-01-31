@@ -1,4 +1,4 @@
-from tqdm import tqdm
+from util import tqdmpos
 
 from block import Block
 
@@ -21,8 +21,7 @@ class WaterSolver:
 
     def _build(self):
         print("Building water level...")
-        for x, y, z in tqdm([(x, y, z) for x in range(self.X) for y in range(self.Y) for z in range(self.Z)],
-                            ascii=True):
+        for x, y, z in tqdmpos(range(self.X), range(self.Y), range(self.Z)):
             b = self.block[y][z][x]
             if b.name == "water" or b.name == "flowing_water":
                 self.level[y][z][x] = int(b.state["level"])
@@ -61,8 +60,7 @@ class WaterSolver:
     def render(self, fout):
         print("Writing water blocks...")
         fout.write('Material "glass" "float eta" [1.33] "rgb Kt" [.28 .72 1]\n')
-        for x, y, z in tqdm([(x, y, z) for x in range(self.X) for y in range(self.Y) for z in range(self.Z)],
-                            ascii=True):
+        for x, y, z in tqdmpos(range(self.X), range(self.Y), range(self.Z)):
             if self.level[y][z][x] == None: continue
             pt = (x, y, z)
             h = self._level2height(self.level[y][z][x])
@@ -149,6 +147,3 @@ class WaterSolver:
                 trimesh((0, 0, .5), pts, rev(indx))
 
             fout.write('AttributeEnd\n')
-
-
-
