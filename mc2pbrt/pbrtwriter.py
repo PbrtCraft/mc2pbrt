@@ -14,13 +14,28 @@ class BlockSolver:
         self.Y = len(self.block)
         self.Z = len(self.block[0])
         self.X = len(self.block[0][0])
+        self.used_texture = set()
+        self._preloadUsedTexture()
 
     def _inBlock(self, pt):
         x, y, z = pt
         return x >= 0 and x < self.X and y >= 0 and y < self.Y and z >= 0 and z < self.Z
 
+    def _preloadUsedTexture(self):
+        print("Preloading used texture...")
+        self.used_texture = set()
+        for x in range(self.X):
+            for y in range(self.Y):
+                for z in range(self.Z):
+                    self.used_texture = self.used_texture | self.block[y][z][x].getUsedTexture()
+
     def render(self, fout, start_pt):
         print("Writing solid blocks...")
+        for fn in self.used_texture:
+            fout.write('Texture "%s-color" "spectrum" "imagemap" "string filename" "%s.png"\n' % (fn, fn))
+            if ResourceManager().hasAlpha(fn + ".png"):
+                fout.write('Texture "%s-alpha" "float" "imagemap" "bool alpha" "true" "string filename" "%s.png"\n' % (fn, fn))
+
         import queue
         que = queue.Queue()
         rendered = set()
@@ -56,22 +71,9 @@ class PbrtWriter:
         self.method = ("sppm", "")
 
         self.envlight = None
-        self.used_texture = set()
 
     def setBlocks(self, block):
         self.block = block
-
-    def _preloadUsedData(self):
-        self.used_texture = set()
-        self.Y = len(self.block)
-        self.Z = len(self.block[0])
-        self.X = len(self.block[0][0])
-        for x in range(self.X):
-            for y in range(self.Y):
-                for z in range(self.Z):
-                    d = self.block[y][z][x]
-                    self.block[y][z][x] = Block(d[0], d[1], d[2])
-                    self.used_texture = self.used_texture | self.block[y][z][x].getUsedTexture()
 
     def _writeEnvLight(self, fout):
         if not self.envlight: return
@@ -83,7 +85,6 @@ class PbrtWriter:
 
     def writeFile(self, filename):
         print("Start write file ...")
-        self._preloadUsedData()
         fout = open(filename, "w")
 
         # The coordinate system of minecraft and pbrt is different.
@@ -92,9 +93,8 @@ class PbrtWriter:
 
         fout.write('Film "image" "integer xresolution" [960] "integer yresolution" [480]\n')
 
-        lookat_vec = self.lookat_vec or (self.X/2, 4, self.Z/2+1, self.X/2, 4, 0, 0, 1, 0)
-        fout.write('LookAt %f %f %f  %f %f %f %f %f %f\n' % lookat_vec)
-        stand_pt = tuple(map(int, lookat_vec[:3]))
+        fout.write('LookAt %f %f %f  %f %f %f %f %f %f\n' % self.lookat_vec)
+        stand_pt = tuple(map(int, self.lookat_vec[:3]))
 
         camera_cmd = self.camera_cmd or 'Camera "environment"'
         fout.write(camera_cmd + "\n")
@@ -103,11 +103,6 @@ class PbrtWriter:
         fout.write('Sampler "lowdiscrepancy" "integer pixelsamples" [%d]\n' % self.samples)
 
         fout.write('WorldBegin\n')
-
-        for fn in self.used_texture:
-            fout.write('Texture "%s-color" "spectrum" "imagemap" "string filename" "%s.png"\n' % (fn, fn))
-            if ResourceManager().hasAlpha(fn + ".png"):
-                fout.write('Texture "%s-alpha" "float" "imagemap" "bool alpha" "true" "string filename" "%s.png"\n' % (fn, fn))
 
         self._writeEnvLight(fout)
 
