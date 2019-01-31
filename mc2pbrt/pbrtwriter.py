@@ -2,7 +2,7 @@ from block import Block
 from resource import ResourceManager
 from water import WaterSolver
 
-from tuple_calculation import plus_i, plus, mult
+from tuple_calculation import plus_i, mult_i
 
 class BlockSolver:
     """Write all solid block in the scene"""
@@ -40,7 +40,9 @@ class BlockSolver:
         deltas = [(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)]
         que.put(start_pt)
         for delta in deltas:
-            que.put(plus_i(delta, start_pt))
+            next_pt = plus_i(delta, start_pt)
+            if not self._inBlock(next_pt): continue
+            que.put(next_pt)
 
         cnt = 0
         while not que.empty():
@@ -51,13 +53,17 @@ class BlockSolver:
             x, y, z = pt
             b = self.block[y][z][x]
 
-            fout.write('Translate %f %f %f\n' % pt)
-            cnt += b.render(fout)
-            fout.write('Translate %f %f %f\n' % mult(pt, -1))
+            if not b.empty():
+                fout.write('Translate %d %d %d\n' % pt)
+                cnt += b.render(fout)
+                fout.write('Translate %d %d %d\n' % mult_i(pt, -1))
 
             if b.canPass():
                 for delta in deltas:
-                    que.put(plus_i(delta, pt))
+                    next_pt = plus_i(delta, pt)
+                    if not self._inBlock(next_pt): continue
+                    if next_pt in rendered: continue
+                    que.put(next_pt)
         print("Render", cnt, "blocks")
 
 

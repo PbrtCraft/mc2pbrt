@@ -83,6 +83,9 @@ class Block:
                 return False
         return True
 
+    def empty(self):
+        return not self.models
+
     def _getModel(self, name):
         model = ResourceManager().model_loader.getModel("block/" + name)
         if "elements" not in model:
@@ -328,7 +331,7 @@ class Block:
             Number of render block(0 or 1)
         """
 
-        if not self.models:
+        if self.empty():
             return 0
 
         fout.write('AttributeBegin\n')
