@@ -5,12 +5,12 @@ from math import cos, sin, pi
 from tqdm import tqdm
 
 import resource
-import world
+from pyanvil import world
 
 from model import ModelLoader
 from biome import Biome
 from pbrtwriter import PbrtWriter
-from player import Player
+from pyanvil.player import Player
 
 from find_minecraft import getMinecraftFolder
 
@@ -85,5 +85,5 @@ if "Method" in settings:
         arg_str = settings["MethodArg"]
     mp.method = (settings["Method"], arg_str)
 
-scenes_path = os.path.join(".", "scenes", settings["Target"])
+scenes_path = os.path.join("..", "scenes", settings["Target"])
 mp.writeFile(scenes_path)

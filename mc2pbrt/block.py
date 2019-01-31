@@ -1,5 +1,7 @@
 from resource import ResourceManager
-from util import *
+from util import pt_map
+from tuple_calculation import plus, mult, minus
+from material import Matte, Glass, Light
 
 class Block:
     SOLID_BLOCK = set([
@@ -11,6 +13,45 @@ class Block:
     ]
     LONG_PLANT = set(["tall_seagrass", "sunflower", "lilac", "rose_bush",
                       "peony", "tall_grass", "large_fern"])
+
+    NORMAL_LIGHT_MAP = {
+        "beacon" : 15,
+        "end_portal" : 15,
+        "fire" : 15,
+        "glowstone" : 15,
+        "jack_o_lantern" : 15,
+        "lava" : 15,
+        "sea_lantern" : 15,
+        "conduit" : 15,
+        "end_rod" : 14,
+        "torch" : 14*8,
+        "torch_wall" : 14*8,
+        "nether_portal" : 11,
+        "ender_chest" : 7,
+        "magma_block" : 3,
+        "brewing_stand" : 1,
+        "brown_mushroom" : 1,
+        "dragon_egg" : 1,
+        "end_portal_frame" : 1,
+    }
+
+    # Sea pickle's light
+    def sea_pickle(b):
+        if b.state["waterlogged"] == "false":
+            return 0
+        return [0, 6, 9, 12, 15][int(b.state["pickles"])]
+
+    # Return a lambda that just determine whether the block's "lit" is on
+    lit = lambda l: (lambda b: [0, l][b.state["lit"] == "true"])
+
+    CONDITION_LIGHT_MAP = {
+        "sea_pickle" : sea_pickle,
+        "furnace" : lit(13),
+        "redstone_ore" : lit(9),
+        "redstone_lamp" : lit(15),
+        "redstone_torch" : lit(7),
+    }
+    
     def __init__(self, name, state, biome_id, model_loader, biome_reader):
         self.name = name
         self.state = state
@@ -24,6 +65,15 @@ class Block:
 
     def _is(self, y):
         return self.name == y or self.name[-len(y)-1:] == "_" + y
+
+    def getLight(self):
+        if self.name in Block.NORMAL_LIGHT_MAP:
+            return Block.NORMAL_LIGHT_MAP[self.name]
+
+        if self.name in Block.CONDITION_LIGHT_MAP:
+            return Block.CONDITION_LIGHT_MAP[self.name](self)
+
+        return 0
 
     def canPass(self):
         if self.name in Block.SOLID_BLOCK:
@@ -51,7 +101,15 @@ class Block:
         elif self.name.find("bed") != -1:
             return
 
+        # Setup Material
+        if self._is("glass"):
+            self.material = Glass(self)
+        elif self.getLight():
+            self.material = Light(self)
+        else:
+            self.material = Matte(self)
 
+        # Setup Model
         if self._is("door") or self.name in Block.LONG_PLANT:
             if self.state["half"] == "lower":
                 self._addModel(self.name + "_bottom")
@@ -231,16 +289,8 @@ class Block:
             delta_f, l_f, dir_, shape = pt_map[facename]
             delta = delta_f(cube)
             l1, l2 = l_f(cube)
-            if "tintindex" in face:
-                if self._is("leaves"):
-                    tint_color = self.bdr.getFoliageColor(self.biome_id, 0)
-                else:
-                    tint_color = self.bdr.getGrassColor(self.biome_id, 0)
-                fout.write(('Material "matte" "texture Kd" "%s-color"' % tex) +
-                           ('"rgb tintMap" [%f %f %f]\n' % tint_color))
-            else:
-                fout.write('Material "matte" "texture Kd" "%s-color"\n' % tex)
             fout.write('AttributeBegin\n')
+            self.material.write(fout, face)
             fout.write('  Translate %f %f %f\n' % delta)
             if ResourceManager.inst.hasAlpha(tex + ".png"):
                 fout.write('  Shape "%s" "float l1" [%f] "float l2" [%f] ' % (shape, l1, l2) +

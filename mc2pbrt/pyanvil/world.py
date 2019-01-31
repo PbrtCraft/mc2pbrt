@@ -1,4 +1,7 @@
-import os, sys, math, nbt, gzip, zlib, stream, time
+import os, sys, math, gzip, zlib, time
+
+import pyanvil.nbt as nbt
+import pyanvil.stream as stream
 
 class BlockState:
     def __init__(self, name, props):

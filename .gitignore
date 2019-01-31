@@ -9,7 +9,6 @@ config.json
 __pycache__
 
 # Resource
-block/*.json
 scenes/block/*.png
 scenes/block/*.png.mcmeta
 

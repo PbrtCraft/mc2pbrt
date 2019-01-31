@@ -10,7 +10,7 @@ class ResourceManager:
     def __init__(self):
         ResourceManager.inst = self
         self.local_model_folder = os.path.join(".", "block")
-        self.local_texture_folder = os.path.join(".", "scenes", "block")
+        self.local_texture_folder = os.path.join("..", "scenes", "block")
         self.setup()
 
         self.table_alpha = {}
