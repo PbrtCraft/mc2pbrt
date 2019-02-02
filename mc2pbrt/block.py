@@ -39,7 +39,7 @@ class Block:
         "conduit" : 15,
         "end_rod" : 14,
         "torch" : 14*8,
-        "torch_wall" : 14*8,
+        "wall_torch" : 14*8,
         "nether_portal" : 11,
         "ender_chest" : 7,
         "magma_block" : 3,
@@ -286,7 +286,7 @@ class Block:
             import math
             rot = ele["rotation"]
             axis = rot["axis"]
-            org = minus([.5, .5, .5], mult(rot["origin"], 1./16))
+            org = minus(mid, mult(rot["origin"], 1./16))
             ang = rot["angle"]
             rxyz = {"x" : (1, 0, 0), "y" : (0, 1, 0), "z" : (0, 0, 1)}
             sxyz = {"x" : (0, 1, 1), "y" : (1, 0, 1), "z" : (1, 1, 0)}
