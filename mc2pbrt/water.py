@@ -57,7 +57,7 @@ class WaterSolver:
             sum_xs += x or 0
         return sum_xs/cnt
 
-    def render(self, fout):
+    def write(self, fout):
         print("Writing water blocks...")
         fout.write('Material "glass" "float eta" [1.33] "rgb Kt" [.28 .72 1]\n')
         for x, y, z in tqdmpos(range(self.X), range(self.Y), range(self.Z)):

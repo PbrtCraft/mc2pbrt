@@ -6,7 +6,7 @@ from math import cos, sin, pi
 from pyanvil import world
 
 from pyanvil.player import Player
-from pbrtwriter import PbrtWriter
+from scene import Scene
 from block import BlockCreator
 
 from find_minecraft import getMinecraftFolder
@@ -49,7 +49,7 @@ for y, dx, dz in tqdmpos(ys, dv, dv):
     name = bs.name[10:]
     arr[y-ys[0]][r + dz][r + dx] = BlockCreator()(name, bs.props, biome_id)
 
-mp = PbrtWriter()
+mp = Scene()
 mp.setBlocks(arr)
 
 map_eye_y = sy+1.8-1
@@ -77,4 +77,4 @@ if "Method" in settings:
     mp.method = (settings["Method"], arg_str)
 
 scenes_path = os.path.join("..", "scenes", settings["Target"])
-mp.writeFile(scenes_path)
+mp.write(scenes_path)
