@@ -72,6 +72,7 @@ class Block:
         self.biome_id = biome_id
         # [(Model, Transform)]
         self.models = []
+        self.type = ""
 
         self._build()
 
@@ -99,16 +100,18 @@ class Block:
         return not self.models
 
     def _getModel(self, name):
-        model = ResourceManager().model_loader.getModel("block/" + name)
+        model, par = ResourceManager().model_loader.getModel("block/" + name)
         if "elements" not in model:
-            return None
-        return model
+            return None, None
+        return model, par
 
-    def _addModel(self, name, transforms=None):
-        mdl = self._getModel(name)
+    def _addModel(self, name, _transforms=None):
+        mdl, par = self._getModel(name)
         if not mdl:
             return
+        transforms = _transforms or []
         self.models.append((mdl, transforms))
+        self.type = par[6:]
 
     def _build(self):
         if self.name == "air" or self.name == "cave_air":
@@ -290,10 +293,10 @@ class Block:
             ang = rot["angle"]
             rxyz = {"x" : (1, 0, 0), "y" : (0, 1, 0), "z" : (0, 0, 1)}
             sxyz = {"x" : (0, 1, 1), "y" : (1, 0, 1), "z" : (1, 1, 0)}
-            scale = 1/math.cos(ang/180.*math.pi)
             fout.write("Translate %f %f %f\n" % mult(org, -1))
             fout.write(("Rotate %f " % ang) + ("%d %d %d\n" % rxyz[axis]))
             if "rescale" in rot and rot["rescale"]:
+                scale = 1/math.cos(ang/180.*math.pi)
                 fout.write("Scale %f %f %f\n" % plus(mult(sxyz[axis], scale), rxyz[axis]))
             fout.write("Translate %f %f %f\n" % org)
 
@@ -305,6 +308,12 @@ class Block:
             delta = delta_f(cube)
             l1, l2 = l_f(cube)
             fout.write('AttributeBegin\n')
+
+            if "rotation" in face:
+                rxyz = {"x" : (1, 0, 0), "y" : (0, 1, 0), "z" : (0, 0, 1)}
+                # shape[-1] should be "x", "y" or "z"
+                fout.write(("Rotate %f " % (face["rotation"]*dir_)) + ("%d %d %d\n" % rxyz[shape[-1]]))
+
             self.material.write(fout, face)
             fout.write('  Translate %f %f %f\n' % delta)
             if ResourceManager().hasAlpha(tex + ".png"):
@@ -356,7 +365,13 @@ class Block:
 
         if "facing" in self.state:
             facing = self.state["facing"]
-            mp = {"north" : 1, "east" : 0, "south" : 3, "west" : 2}
+            if self.type == "orientable":
+                mp = {"north" : 0, "east" : 1, "south" : 2, "west" : 3}
+            elif self.type == "template_piston":
+                mp = {"north" : 2, "east" : 3, "south" : 0, "west" : 1}
+            else:
+                mp = {"north" : 1, "east" : 0, "south" : 3, "west" : 2}
+
             if facing in mp:
                 self._writeRotate(fout, "y", mp[facing]*90)
             elif facing == "down":
@@ -365,20 +380,18 @@ class Block:
                 self._writeRotate(fout, "z", 90)
         
         for model, transforms in self.models:
-            if transforms:
-                for t in transforms:
-                    if t["type"] == "rotate":
-                        self._writeRotate(fout, t["axis"], t["angle"])
-                    elif t["type"] == "scale":
-                        self._writeScale(fout, t["axis"], t["value"])
+            for t in transforms:
+                if t["type"] == "rotate":
+                    self._writeRotate(fout, t["axis"], t["angle"])
+                elif t["type"] == "scale":
+                    self._writeScale(fout, t["axis"], t["value"])
             for ele in model["elements"]:
                 self._writeElement(fout, ele)
-            if transforms:
-                for t in transforms[::-1]:
-                    if t["type"] == "rotate":
-                        self._writeRotate(fout, t["axis"], -t["angle"])
-                    elif t["type"] == "scale":
-                        self._writeScale(fout, t["axis"], 1/t["value"])
+            for t in transforms[::-1]:
+                if t["type"] == "rotate":
+                    self._writeRotate(fout, t["axis"], -t["angle"])
+                elif t["type"] == "scale":
+                    self._writeScale(fout, t["axis"], 1/t["value"])
         fout.write('AttributeEnd\n')
         return 1
 

@@ -126,7 +126,7 @@ class ModelLoader:
         self._resolveElements(data)
             
         if "parent" in data and data["parent"] not in ["block/block", "block/thin_block"]:
-            par_data = self._getModel(data["parent"])
+            par_data, par = self._getModel(data["parent"])
             if "textures" in data:
                 if "textures" not in par_data:
                     par_data["textures"] = {}
@@ -136,13 +136,13 @@ class ModelLoader:
             flag_eles = self._resolveElements(par_data)
             flag_texs = self._resolveTextures(par_data)
             if flag_eles or flag_texs: 
-                return par_data
-        return data
+                return par_data, data["parent"]
+        return data, ""
 
     def getModel(self, name):
         if name not in self.db:
-            model = self._getModel(name)
-            self.db[name] = model
+            model, par = self._getModel(name)
+            self.db[name] = (model, par)
             if "elements" in model:
                 for ele in model["elements"]:
                     ele["from"] = mult(ele["from"], 1./16)
