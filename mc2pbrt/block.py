@@ -1,7 +1,7 @@
 from resource import ResourceManager
 from util import pt_map
 from tuple_calculation import plus, mult, minus
-from material import Matte, Glass, Light
+from material import Matte, Glass, Light, Foliage
 
 from util import singleton
 
@@ -124,6 +124,8 @@ class Block:
             self.material = Glass(self)
         elif self.getLight():
             self.material = Light(self)
+        elif self._is("leaves"):
+            self.material = Foliage(self)
         else:
             self.material = Matte(self)
 
