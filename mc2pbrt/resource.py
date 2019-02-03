@@ -16,6 +16,7 @@ class ResourceManager:
         self.local_model_folder = os.path.join(".", "block")
         self.model_loader = ModelLoader(".")
         self.local_texture_folder = os.path.join("..", "scenes", "block")
+        self.scene_folder = os.path.join("..", "scenes")
         self.setup()
 
         self.table_alpha = {}

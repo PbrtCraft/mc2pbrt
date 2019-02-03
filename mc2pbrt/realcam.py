@@ -1,80 +1,89 @@
 import os
 import errno
-import json
-from math import cos, sin, pi
 
-from pyanvil import world
+import find_minecraft
 
+from resource import ResourceManager
+from pyanvil.world import World
 from pyanvil.player import Player
 from scene import Scene
 from block import BlockCreator
 
-from find_minecraft import getMinecraftFolder
 from util import tqdmpos
 
-with open("config.json", "r") as f:
-    settings = json.load(f)
+class RealCam:
+    """Produce a scene with radius"""
 
-# World an be a full path or a world folder name
-if os.path.exists(settings["World"]):
-    world_path = settings["World"]
-else:
-    world_path = os.path.join(getMinecraftFolder(), "saves", settings["World"])
-    if not os.path.exists(world_path):
-        raise FileNotFoundError(errno.ENOENT, "World not found.")
+    def __init__(self, world_name, player_name, radius, samples,
+                       camera_cmd, phenomenons, method):
+        # World an be a full path or a world folder name
+        if os.path.exists(world_name):
+            world_path = world_name 
+        else:
+            world_path = os.path.join(find_minecraft.getMinecraftFolder(),
+                                      "saves", world_name)
+            if not os.path.exists(world_path):
+                raise FileNotFoundError(errno.ENOENT, "World not found.")
+        print("Get world:", world_path)
+        self.world_path = world_path
+        self.player = Player(self.world_path, player_name) 
 
-print("Get world:", world_path)
+        # parameters of scene 
+        self.radius = radius
+        self.samples = samples
+        self.camera_cmd = camera_cmd
+        self.phenomenons = phenomenons
+        self.method = method
 
-w = world.World(world_path)
-r = settings["Radius"]
-sz = 2*r+1
-ys = list(range(1, 256))
-arr = [[[None]*sz for i in range(sz)] for j in ys]
-dv = range(-r, r+1)
+    def _laglongToCoord(self, theta, phi):
+        """Convert lagtitude and longitude to xyz coordinate."""
+        from math import cos, sin, pi
+        theta, phi = -theta/180*pi, -phi/180*pi
+        return sin(theta)*cos(phi), sin(phi), cos(theta)*cos(phi)
 
-player = Player(world_path, settings["Player"])
+    def _getBlocks(self):
+        """Get blocks by radius"""
+        world = World(self.world_path)
+        r = self.radius
+        sz = 2*r+1
+        ys = list(range(1, 256))
+        arr = [[[None]*sz for i in range(sz)] for j in ys]
+        dv = range(-r, r+1)
 
-isx, isy, isz = map(int, player.pos)
-sx, sy, sz = player.pos
+        isx, isy, isz = map(int, self.player.pos)
 
-# check origin point
+        # check origin point
+        origin = world.get_block((isx, isy, isz)).state.name[10:]
+        if origin.find("air") == -1:
+            print("[Warning] Origin point is not empty.")
 
-origin = w.get_block((isx, isy, isz)).state.name[10:]
-if origin.find("air") == -1:
-    print("[Warning] Origin point is not empty.")
+        for y, dx, dz in tqdmpos(ys, dv, dv):
+            bs = world.get_block((isx+dx, y, isz+dz)).state
+            biome_id = world.get_biome((isx+dx, y, isz+dz))
+            name = bs.name[10:]
+            arr[y-ys[0]][r + dz][r + dx] = BlockCreator()(name, bs.props, biome_id)
 
-for y, dx, dz in tqdmpos(ys, dv, dv):
-    bs = w.get_block((isx+dx, y, isz+dz)).state
-    biome_id = w.get_biome((isx+dx, y, isz+dz))
-    name = bs.name[10:]
-    arr[y-ys[0]][r + dz][r + dx] = BlockCreator()(name, bs.props, biome_id)
+        return arr
 
-mp = Scene()
-mp.setBlocks(arr)
+    def _getLookAt(self):
+        """Get lookat vector by pos of player"""
+        r = self.radius
+        theta, phi = self.player.rot
+        sx, sy, sz = self.player.pos
+        tx, ty, tz = self._laglongToCoord(theta, phi) 
+        nx, ny, nz = self._laglongToCoord(theta, phi + 90)
+        map_eye_y = sy+1.8-1
+        return (r, map_eye_y, r, r + tx, map_eye_y + ty, r + tz, nx, ny, nz)
 
-map_eye_y = sy+1.8-1
+    def run(self, target):
+        blocks = self._getBlocks()
+        scene = Scene(blocks)
+        scene.lookat_vec = self._getLookAt()
 
-theta, phi = player.rot
-theta, phi = -theta/180*pi, -phi/180*pi
-tx, ty, tz = sin(theta)*cos(phi), sin(phi), cos(theta)*cos(phi)
-phi += pi/2
-nx, ny, nz = sin(theta)*cos(phi), sin(phi), cos(theta)*cos(phi)
-mp.lookat_vec = (r, map_eye_y, r, r + tx, map_eye_y + ty, r + tz, nx, ny, nz)
+        scene.samples = self.samples 
+        scene.camera_cmd = self.camera_cmd 
+        scene.phenomenons = self.phenomenons
+        scene.method = (self.method, "")
 
-if "Samples" in settings:
-    mp.samples = settings["Samples"]
-
-if "Camera" in settings:
-    mp.camera_cmd = settings["Camera"]
-
-if "EnvLight" in settings:
-    mp.envlight = settings["EnvLight"]
-
-if "Method" in settings:
-    arg_str = ""
-    if "MethodArg" in settings:
-        arg_str = settings["MethodArg"]
-    mp.method = (settings["Method"], arg_str)
-
-scenes_path = os.path.join("..", "scenes", settings["Target"])
-mp.write(scenes_path)
+        scene_path = os.path.join(ResourceManager().scene_folder, target)
+        scene.write(scene_path)
