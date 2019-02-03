@@ -8,10 +8,11 @@ if __name__ == "__main__":
         settings = json.load(f)
 
     phs = []
-    if "EnvLight" in settings:
-        phs = [
-            phenomenon.EnvirnmentMap(settings["EnvLight"])
-        ]
+    for ph in settings.get("Phenomenons", []):
+        if ph[0] == "Fog":
+            phs.append(phenomenon.Fog(ph[1], ph[2]))
+        elif ph[0] == "EnvLight":
+            phs.append(phenomenon.EnvirnmentMap(ph[1]))
 
     rc = RealCam(
         world_name = settings["World"],
