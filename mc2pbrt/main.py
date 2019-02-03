@@ -13,6 +13,12 @@ if __name__ == "__main__":
             phs.append(phenomenon.Fog(ph[1], ph[2]))
         elif ph[0] == "EnvLight":
             phs.append(phenomenon.EnvirnmentMap(ph[1]))
+        elif ph[0] == "Sun":
+            phs.append(phenomenon.Sun(ph[1], ph[2]))
+        elif ph[0] == "Rain":
+            phs.append(phenomenon.Rain(ph[1], ph[2]))
+        else:
+            print("[Warning] %s phenomenon not found." % ph[0])
 
     rc = RealCam(
         world_name = settings["World"],

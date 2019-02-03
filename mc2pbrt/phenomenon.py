@@ -22,3 +22,65 @@ class Fog:
                    '"rgb sigma_s" [%f %f %f]\n' % I_s +
                    '"rgb sigma_a" [%f %f %f]\n' % I_a)
         fout.write('MediumInterface "" "Fog"\n')
+
+
+class Sun:
+    def __init__(self, hour, scene_radius): 
+        if hour < 6 or hour > 18:
+            raise ValueError("Hour should be in the range of [6, 18]")
+
+        from math import cos, sin, pi
+        theta = (hour - 12)/12*pi
+        dist = scene_radius*3
+        mid = scene_radius
+        self.position = (mid + dist*sin(theta), dist*cos(theta), mid)
+
+        # Empirical formula 
+        self.scale = 50./(80**2)*(dist**2)
+
+    def write(self, fout):
+        fout.write('LightSource "distant" "point from" [%f %f %f]' % self.position +
+                   '"blackbody L" [6500 %f]' % self.scale)
+
+
+class Rain:
+    def __init__(self, rainfall, scene_radius):
+        self.size = scene_radius*2 + 1
+        self.rainfall = rainfall
+
+    def write(self, fout):
+        from random import uniform, randint
+        from tqdm import tqdm 
+        from util import tqdmpos
+
+        uni01 = lambda x: uniform(0, 1)
+
+        print("Preparing rain instance...")
+        fout.write('AttributeBegin\n')
+        fout.write('Material "glass" "float eta" [1.33] "rgb Kt" [.28 .72 1]\n')
+        for i in tqdm(range(100), ascii=True):
+            fout.write('ObjectBegin "RainStreak%02d"\n' % i)
+            for j in range(100*self.rainfall):
+                fout.write('AttributeBegin\n')
+                x, y, z = map(uni01, [None]*3)
+                l = uniform(0, 0.1)
+                fout.write('Translate %f %f %f\n' % (x, y, z))
+                fout.write('Shape "cylinder" "float radius" [0.001] ' +
+                           '"float zmin" [%f] "float zmax" [%f]\n' % (-l/2, l/2))
+                fout.write('AttributeEnd\n')
+            fout.write('ObjectEnd\n')
+
+        # Pbrt cylinder is z-base.
+        fout.write('ConcatTransform [1 0 0 0 ' +
+                                    '0 0 1 0 ' +
+                                    '0 1 0 0 ' +
+                                    '0 0 0 1]\n')
+        sz = self.size
+        print("Writing rain streaks...")
+        for x, y, z in tqdmpos(range(sz), range(sz), range(256)):
+            ind = randint(0, 99)
+            fout.write('AttributeBegin\n')
+            fout.write("Translate %d %d %d\n" % (x, y, z))
+            fout.write('ObjectInstance "RainStreak%02d"\n' % ind)
+            fout.write('AttributeEnd\n')
+        fout.write('AttributeEnd\n')
