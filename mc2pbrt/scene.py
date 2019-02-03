@@ -18,7 +18,7 @@ class Scene:
 
         # The coordinate system of minecraft and pbrt is different.
         # Pbrt is lefthand base, while minecraft is righthand base.
-        fout.write("Scale 1 -1 1\n")
+        fout.write("Scale -1 1 1\n")
 
         fout.write('Film "image" "integer xresolution" [960] "integer yresolution" [480]\n')
 

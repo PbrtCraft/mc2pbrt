@@ -38,7 +38,7 @@ class RealCam:
     def _laglongToCoord(self, theta, phi):
         """Convert lagtitude and longitude to xyz coordinate."""
         from math import cos, sin, pi
-        theta, phi = -theta/180*pi, -phi/180*pi
+        theta, phi = theta/180*pi, phi/180*pi
         return sin(theta)*cos(phi), sin(phi), cos(theta)*cos(phi)
 
     def _getBlocks(self):
@@ -68,7 +68,7 @@ class RealCam:
     def _getLookAt(self):
         """Get lookat vector by pos of player"""
         r = self.radius
-        theta, phi = self.player.rot
+        theta, phi = map(lambda x: -x, self.player.rot)
         sx, sy, sz = self.player.pos
         tx, ty, tz = self._laglongToCoord(theta, phi) 
         nx, ny, nz = self._laglongToCoord(theta, phi + 90)
