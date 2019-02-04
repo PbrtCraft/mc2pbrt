@@ -134,6 +134,7 @@ class Block:
         self.biome_id = biome_id
         # [(Model, Transform)]
         self.models = []
+        self.material = None
         self.type = ""
 
         self._build()
@@ -167,12 +168,13 @@ class Block:
             return None, None
         return model, par
 
-    def _addModel(self, name, _transforms=None):
+    def _addModel(self, name, _transforms=None, _material = None):
         mdl, par = self._getModel(name)
         if not mdl:
             return
         transforms = _transforms or []
-        self.models.append((mdl, transforms))
+        material = _material or self.material
+        self.models.append((mdl, transforms, material))
         self.type = par[6:]
 
     def _build(self):
@@ -184,7 +186,8 @@ class Block:
         # Setup Material
         if self._is("glass"):
             self.material = Glass(self)
-        elif self.getLight():
+        elif self.getLight() and self.name != "torch":
+            # Torch's ligh is hard code.
             self.material = Light(self)
         elif self._is("leaves"):
             self.material = Foliage(self)
@@ -337,11 +340,47 @@ class Block:
         elif self.name == "end_gateway":
             # TODO
             pass
+        elif self.name == "torch":
+            self._addModel("torch")
+            # Hard-code fire part
+            face = {
+                "uv": (0, 0, 1, 1),
+                "texture": "block/sea_lantern"
+            }
+            fire = {
+                "elements": [{
+                    "from": [ 7/16, 8/16, 7/16 ],
+                    "to": [ 9/16, 10/16, 9/16 ],
+                    "faces": {
+                        key : face for key in ["up", "down", "west", "east", "north", "south"]
+                    }
+                }]
+            }
+            self.models.append((fire, [], Light(self)))
+
+        elif self.name == "wall_torch":
+            self._addModel("wall_torch")
+            # Hard-code fire part
+            face = {
+                "uv": (0, 0, 1, 1),
+                "texture": "block/sea_lantern"
+            }
+            fire = {
+                "elements": [{
+                    "from": [ -1/16, 3.5/16, 7/16 ],
+                    "to": [ 1/16, 13.5/16, 9/16 ],
+                    "rotation": { "origin": [ 0, 3.5, 8 ], "axis": "z", "angle": -22.5 },
+                    "faces": {
+                        key : face for key in ["up", "down", "west", "east", "north", "south"]
+                    }
+                }]
+            }
+            self.models.append((fire, [], Light(self)))
 
         else:
             self._addModel(self.name)
 
-    def _writeElement(self, fout, ele):
+    def _writeElement(self, fout, ele, material):
         from_pt = ele["from"]
         to_pt = ele["to"]
         cube = minus(to_pt, from_pt)
@@ -378,7 +417,9 @@ class Block:
                 # shape[-1] should be "x", "y" or "z"
                 fout.write(("Rotate %f " % (face["rotation"]*dir_)) + ("%d %d %d\n" % rxyz[shape[-1]]))
 
-            self.material.write(fout, face)
+            if material:
+                material.write(fout, face)
+
             fout.write('  Translate %f %f %f\n' % delta)
             if ResourceManager().hasAlpha(tex + ".png"):
                 fout.write('  Shape "%s" "float l1" [%f] "float l2" [%f] ' % (shape, l1, l2) +
@@ -443,14 +484,14 @@ class Block:
             elif facing == "top":
                 self._writeRotate(fout, "z", 90)
         
-        for model, transforms in self.models:
+        for model, transforms, material in self.models:
             for t in transforms:
                 if t["type"] == "rotate":
                     self._writeRotate(fout, t["axis"], t["angle"])
                 elif t["type"] == "scale":
                     self._writeScale(fout, t["axis"], t["value"])
             for ele in model["elements"]:
-                self._writeElement(fout, ele)
+                self._writeElement(fout, ele, material)
             for t in transforms[::-1]:
                 if t["type"] == "rotate":
                     self._writeRotate(fout, t["axis"], -t["angle"])
@@ -461,7 +502,7 @@ class Block:
 
     def getUsedTexture(self):
         used_texture = set()
-        for model, transform in self.models:
+        for model, transform, material in self.models:
             for ele in model["elements"]:
                 for facename in ele["faces"]: 
                     face = ele["faces"][facename]
