@@ -23,7 +23,10 @@ Example:
   "Camera" : "Camera \"perspective\"",
   "World" : "Idea",
   "Player" : "Mudream",
-  "EnvLight" : "env/aristea_wreck_4k.exr",
+  "Phenomenons" : [
+    ["Rain", 1, 48],
+    ["EnvLight", "env/aristea_wreck_4k.exr"]
+  ],
   "Method" : "path",
   "Radius" : 16,
   "Target" : "example.pbrt"
@@ -34,11 +37,36 @@ Example:
 * Camera: Pbrt camera name and parameter
 * World: World name or path
 * Player: Id of player
-* EnvLight: Envirnment light map filename
+* Phenomenons: A list of phenomenons, see more detail at **Phenomenons System**.
 * Method: Render method
-* MethodArg: More setting about render method
 * Radius: Render block radius
 * Target: Output filename
+
+### Phenomenons System
+
+#### EnvLight
+
+Use envirnment light map as sky. Parameters:
+
+* `filename`: map filename
+
+#### Sun
+
+Write a blackbody with T=6500 to simulate sun. Parameters:
+
+* `hour`: Simulate time, shound be in range of [6, 18]. 
+* `scene_radius`: Radius of scene.
+
+#### Fog
+
+Use homogeneous volume to simulate fog.
+Note that this fog will shield envlight.
+Parameters:
+
+* `I_s`: Scatter scalar
+* `I_a`: Absorb scalar 
+
+#### Rain
 
 ## Folder
 
