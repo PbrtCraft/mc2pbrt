@@ -186,8 +186,9 @@ class Block:
         # Setup Material
         if self._is("glass"):
             self.material = Glass(self)
-        elif self.getLight() and self.name != "torch":
+        elif self.getLight() and self.name not in ["torch", "wall_torch"]:
             # Torch's ligh is hard code.
+            print(self.name)
             self.material = Light(self)
         elif self._is("leaves"):
             self.material = Foliage(self)
@@ -347,10 +348,11 @@ class Block:
                 "uv": (0, 0, 1, 1),
                 "texture": "block/sea_lantern"
             }
+            eps = tuple([.001]*3)
             fire = {
                 "elements": [{
-                    "from": [ 7/16, 8/16, 7/16 ],
-                    "to": [ 9/16, 10/16, 9/16 ],
+                    "from": minus((7/16, 8/16, 7/16), eps),
+                    "to": plus((9/16, 10/16, 9/16), eps),
                     "faces": {
                         key : face for key in ["up", "down", "west", "east", "north", "south"]
                     }
@@ -365,10 +367,11 @@ class Block:
                 "uv": (0, 0, 1, 1),
                 "texture": "block/sea_lantern"
             }
+            eps = tuple([.001]*3)
             fire = {
                 "elements": [{
-                    "from": [ -1/16, 3.5/16, 7/16 ],
-                    "to": [ 1/16, 13.5/16, 9/16 ],
+                    "from": minus((-1/16, 11.5/16, 7/16), eps),
+                    "to": plus((1/16, 13.5/16, 9/16), eps),
                     "rotation": { "origin": [ 0, 3.5, 8 ], "axis": "z", "angle": -22.5 },
                     "faces": {
                         key : face for key in ["up", "down", "west", "east", "north", "south"]
