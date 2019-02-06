@@ -2,6 +2,7 @@ import os
 import errno
 
 import find_minecraft
+import lookat
 
 from resource import ResourceManager
 from pyanvil.world import World
@@ -34,12 +35,6 @@ class RealCam:
         self.camera_cmd = camera_cmd
         self.phenomenons = phenomenons
         self.method = method
-
-    def _laglongToCoord(self, theta, phi):
-        """Convert lagtitude and longitude to xyz coordinate."""
-        from math import cos, sin, pi
-        theta, phi = theta/180*pi, phi/180*pi
-        return sin(theta)*cos(phi), sin(phi), cos(theta)*cos(phi)
 
     def _getBlocks(self):
         """Get blocks by radius"""
@@ -74,12 +69,12 @@ class RealCam:
     def _getLookAt(self):
         """Get lookat vector by pos of player"""
         r = self.radius
-        theta, phi = map(lambda x: -x, self.player.rot)
-        sx, sy, sz = self.player.pos
-        tx, ty, tz = self._laglongToCoord(theta, phi) 
-        nx, ny, nz = self._laglongToCoord(theta, phi + 90)
-        map_eye_y = sy+1.8-1
-        return (r, map_eye_y, r, r + tx, map_eye_y + ty, r + tz, nx, ny, nz)
+        isx, isy, isz = map(int, self.player.pos)
+        vec = lookat.firstPerson(self.player)
+        dx, dz = isx - r, isz - r
+        return (vec[0] - dx, vec[1], vec[2] - dz,
+                vec[3] - dx, vec[4], vec[5] - dz,
+                vec[6], vec[7], vec[8])
 
     def run(self, target):
         blocks = self._getBlocks()
