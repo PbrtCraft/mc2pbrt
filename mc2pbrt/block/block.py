@@ -1,5 +1,5 @@
 from resource import ResourceManager
-from material import Matte, Glass, Light, Foliage
+from material import Matte
 
 from util import pt_map
 from tuple_calculation import plus, mult, minus 
@@ -65,7 +65,7 @@ class BlockBase:
         self.material = Matte(self) 
         self.type = ""
 
-        self._build()
+        self.build()
 
     def _is(self, y):
         return self.name == y or self.name[-len(y)-1:] == "_" + y
@@ -96,7 +96,7 @@ class BlockBase:
             return None, None
         return model, par
 
-    def _addModel(self, name, _transforms=None, _material = None):
+    def addModel(self, name, _transforms=None, _material = None):
         mdl, par = self._getModel(name)
         if not mdl:
             return
@@ -105,7 +105,7 @@ class BlockBase:
         self.models.append((mdl, transforms, material))
         self.type = par[6:]
 
-    def _build(self):
+    def build(self):
         raise NotImplementedError("BlockBase._build")
 
     def _writeElement(self, fout, ele, material):

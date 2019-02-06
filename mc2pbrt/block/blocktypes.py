@@ -3,59 +3,59 @@ from tuple_calculation import minus, plus
 from material import Matte, Glass, Light, Foliage
 
 class BlockAir(BlockBase):
-    def _build(self):
+    def build(self):
         return
 
 class BlockNormal(BlockBase):
-    def _build(self):
+    def build(self):
         if self.getLight():
             self.material = Light(self)
-        self._addModel(self.name)
+        self.addModel(self.name)
 
 class BlockNotImplement(BlockBase):
-    def _build(self):
+    def build(self):
         print("[Warning] %s block not implement." % self.name)
 
 class BlockHeight2(BlockBase):
-    def _build(self):
+    def build(self):
         if self.state["half"] == "lower":
-            self._addModel(self.name + "_bottom")
+            self.addModel(self.name + "_bottom")
         elif self.state["half"] == "upper":
-            self._addModel(self.name + "_top")
+            self.addModel(self.name + "_top")
 
 class BlockNetherPortal(BlockBase):
-    def _build(self):
+    def build(self):
         self.material = Light(self)
         if self.state["axis"] == "x":
-            self._addModel("nether_portal_ns")
+            self.addModel("nether_portal_ns")
         else:
-            self._addModel("nether_portal_ew")
+            self.addModel("nether_portal_ew")
 
 class BlockSlab(BlockBase):
-    def _build(self):
+    def build(self):
         if self.state["type"] == "double":
             if self._is("cobblestone_slab"):
-                self._addModel(self.name[:-5])
+                self.addModel(self.name[:-5])
             elif self.name == "stone_slab":
-                self._addModel("stone_slab_double")
+                self.addModel("stone_slab_double")
             elif self._is("brick_slab"):
-                self._addModel(self.name[:-10] + "bricks")
+                self.addModel(self.name[:-10] + "bricks")
             else:
-                self._addModel(self.name[:-4] + "planks")
+                self.addModel(self.name[:-4] + "planks")
         elif self.state["type"] == "top":
-            self._addModel(self.name + "_top")
+            self.addModel(self.name + "_top")
         else:
-            self._addModel(self.name)
+            self.addModel(self.name)
 
 class BlockTrapDoor(BlockBase):
-    def _build(self):
+    def build(self):
         if self.state["open"] == "true":
-            self._addModel(self.name + "_open")
+            self.addModel(self.name + "_open")
         else:
-            self._addModel(self.name + "_" + self.state["half"])
+            self.addModel(self.name + "_" + self.state["half"])
 
 class BlockStairs(BlockBase):
-    def _build(self):
+    def build(self):
         shape = self.state["shape"]
         transform = []
         model_name = self.name
@@ -65,47 +65,47 @@ class BlockStairs(BlockBase):
             transform.append({"type" : "rotate", "axis" : "y", "angle" : 90})
         if self.state["half"] == "top":
             transform.append({"type" : "scale", "axis" : "y", "value" : -1})
-        self._addModel(model_name, transform)
+        self.addModel(model_name, transform)
 
 class BlockFenceType(BlockBase):
-    def _build(self): 
-        self._addModel(self.name + "_post")
+    def build(self): 
+        self.addModel(self.name + "_post")
         side = self.name + "_side"
         mp = {"north" : 0, "east" : 3, "south" : 2, "west" : 1}
         for k in mp:
             if self.state[k] == "true":
-                self._addModel(side, [
+                self.addModel(side, [
                     {"type" : "rotate", "axis" : "y", "angle" : 90*mp[k]}
                 ])
 
 class BlockFenceGate(BlockBase):
-    def _build(self):
+    def build(self):
         x = self.name
         if self.state["in_wall"] == "true":
             x += "_wall"
         if self.state["open"] == "true":
             x += "_open"
-        self._addModel(x)
+        self.addModel(x)
 
 class BlockIronBars(BlockBase):
-    def _build(self):
-        self._addModel(self.name + "_post")
+    def build(self):
+        self.addModel(self.name + "_post")
         side = self.name + "_side"
         mp = {"north" : 0, "east" : 3, "south" : 2, "west" : 1}
         for k in mp:
             if self.state[k] == "true":
-                self._addModel(side, [
+                self.addModel(side, [
                     {"type" : "rotate", "axis" : "y", "angle" : 90*mp[k]}
                 ])
 
 class BlockGlassPane(BlockBase):
-    def _build(self):
-        self._addModel(self.name + "_post")
+    def build(self):
+        self.addModel(self.name + "_post")
         side = self.name + "_side"
         mp = {"north" : 0, "east" : 3, "south" : 2, "west" : 1}
         for k in mp:
             if self.state[k] == "true":
-                self._addModel(side, [
+                self.addModel(side, [
                     {"type" : "rotate", "axis" : "y", "angle" : 90*mp[k]}
                 ])
 
@@ -118,43 +118,43 @@ class BlockStages(BlockBase):
             self.stage_func = stage_func
         super(BlockStages, self).__init__(name, state, biome_id) 
 
-    def _build(self):
+    def build(self):
         age = int(self.state["age"])
-        self._addModel(self.name + ("_stage%d" % self.stage_func(age)))
+        self.addModel(self.name + ("_stage%d" % self.stage_func(age)))
 
 class BlockCake(BlockBase):
-    def _build(self):
+    def build(self):
         bit = int(self.state["bites"])
         if bit:
-            self._addModel(self.name + ("_slice%d" % bit))
+            self.addModel(self.name + ("_slice%d" % bit))
         else:
-            self._addModel(self.name)
+            self.addModel(self.name)
 
 class BlockHopper(BlockBase):
-    def _build(self): 
+    def build(self): 
         if self.state["facing"] != "down":
-            self._addModel(self.name + "_side")
+            self.addModel(self.name + "_side")
         else:
-            self._addModel(self.name)
+            self.addModel(self.name)
 
 class BlockFarmLand(BlockBase):
-    def _build(self):
+    def build(self):
         if int(self.state["moisture"]) == 7:
-            self._addModel("farm_land_moist")
+            self.addModel("farm_land_moist")
         else:
-            self._addModel("farm_land")
+            self.addModel("farm_land")
 
 class BlockSnow(BlockBase):
-    def _build(self):
+    def build(self):
         h = int(self.state["layers"])
         if h == 8:
-            self._addModel("snow_block")
+            self.addModel("snow_block")
         else:
-            self._addModel("snow_height%d" % (h*2))
+            self.addModel("snow_height%d" % (h*2))
 
 class BlockTorch(BlockBase):
-    def _build(self):
-        self._addModel("torch")
+    def build(self):
+        self.addModel("torch")
         # Hard-code fire part
         face = {
             "uv": (0, 0, 1, 1),
@@ -173,8 +173,8 @@ class BlockTorch(BlockBase):
         self.models.append((fire, [], Light(self)))
 
 class BlockWallTorch(BlockBase):
-    def _build(self):
-        self._addModel("wall_torch")
+    def build(self):
+        self.addModel("wall_torch")
         # Hard-code fire part
         face = {
             "uv": (0, 0, 1, 1),
@@ -194,11 +194,11 @@ class BlockWallTorch(BlockBase):
         self.models.append((fire, [], Light(self)))
 
 class BlockLeaves(BlockBase):
-    def _build(self):
+    def build(self):
         self.material = Foliage(self)
-        self._addModel(self.name)
+        self.addModel(self.name)
 
 class BlockGlass(BlockBase):
-    def _build(self):
+    def build(self):
         self.material = Glass(self)
-        self._addModel(self.name)
+        self.addModel(self.name)

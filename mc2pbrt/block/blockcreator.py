@@ -14,13 +14,13 @@ class BlockCreator:
         return self.db[key]
 
     def _create(self, name, state, biome_id): 
+        check = lambda y: name == y or name[-len(y)-1:] == "_" + y
+
         if name in ["air", "cave_air"]:
             return BlockAir(name, state, biome_id)
-        elif name.find("bed") != -1:
+        elif check("bed"):
             # TODO
             return BlockNotImplement(name, state, biome_id)
-
-        check = lambda y: name == y or name[-len(y)-1:] == "_" + y
 
         # Setup Model
         if check("door") or name in BlockBase.LONG_PLANT:
