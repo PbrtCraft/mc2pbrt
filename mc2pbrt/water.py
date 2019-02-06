@@ -1,7 +1,5 @@
 from util import tqdmpos
 
-from block import Block
-
 from tuple_calculation import plus
 
 class WaterSolver:

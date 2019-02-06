@@ -1,83 +1,8 @@
 from resource import ResourceManager
 from material import Matte, Glass, Light, Foliage
 
-from util import pt_map, singleton
-from tuple_calculation import plus, mult, minus, plus_i, mult_i
-
-@ singleton
-class BlockCreator:
-    def __init__(self):
-        self.db = {}
-
-    def __call__(self, name, state, biome_id):
-        key = (name, tuple(sorted(state.items())), biome_id)
-        if key not in self.db:
-            self.db[key] = Block(name, state, biome_id)
-        return self.db[key]
-
-
-class BlockSolver:
-    """Write all solid block in the scene"""
-
-    def __init__(self, block):
-        self.block = block
-        self.Y = len(self.block)
-        self.Z = len(self.block[0])
-        self.X = len(self.block[0][0])
-        self.used_texture = set()
-        self._preloadUsedTexture()
-
-    def _inBlock(self, pt):
-        x, y, z = pt
-        return x >= 0 and x < self.X and y >= 0 and y < self.Y and z >= 0 and z < self.Z
-
-    def _preloadUsedTexture(self):
-        print("Preloading used texture...")
-        self.used_texture = set()
-        for x in range(self.X):
-            for y in range(self.Y):
-                for z in range(self.Z):
-                    self.used_texture = self.used_texture | self.block[y][z][x].getUsedTexture()
-
-    def write(self, fout, start_pt):
-        print("Writing solid blocks...")
-        for fn in self.used_texture:
-            fout.write('Texture "%s-color" "spectrum" "imagemap" "string filename" "%s.png"\n' % (fn, fn))
-            if ResourceManager().hasAlpha(fn + ".png"):
-                fout.write('Texture "%s-alpha" "float" "imagemap" "bool alpha" "true" "string filename" "%s.png"\n' % (fn, fn))
-
-        import queue
-        que = queue.Queue()
-        rendered = set()
-        deltas = [(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)]
-        que.put(start_pt)
-        for delta in deltas:
-            next_pt = plus_i(delta, start_pt)
-            if not self._inBlock(next_pt): continue
-            que.put(next_pt)
-
-        cnt = 0
-        while not que.empty():
-            pt = que.get()
-            if not self._inBlock(pt): continue
-            if pt in rendered: continue
-            rendered.add(pt)
-            x, y, z = pt
-            b = self.block[y][z][x]
-
-            if not b.empty():
-                fout.write('Translate %d %d %d\n' % pt)
-                cnt += b.write(fout)
-                fout.write('Translate %d %d %d\n' % mult_i(pt, -1))
-
-            if b.canPass():
-                for delta in deltas:
-                    next_pt = plus_i(delta, pt)
-                    if not self._inBlock(next_pt): continue
-                    if next_pt in rendered: continue
-                    que.put(next_pt)
-        print("Render", cnt, "blocks")
-
+from util import pt_map
+from tuple_calculation import plus, mult, minus 
 
 class Block:
     SOLID_BLOCK = set([
