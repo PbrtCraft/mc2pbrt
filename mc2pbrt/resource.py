@@ -13,8 +13,8 @@ from util import singleton
 @singleton
 class ResourceManager:
     def __init__(self):
-        self.local_model_folder = os.path.join(".", "block")
-        self.model_loader = ModelLoader(".")
+        self.local_model_folder = os.path.join(".", "models", "block")
+        self.model_loader = ModelLoader(os.path.join(".", "models"))
         self.local_texture_folder = os.path.join("..", "scenes", "block")
         self.scene_folder = os.path.join("..", "scenes")
         self.setup()
