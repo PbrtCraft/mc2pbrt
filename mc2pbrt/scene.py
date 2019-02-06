@@ -6,7 +6,7 @@ class Scene:
     def __init__(self, block):
         self.block = block
 
-        self.camera_cmd = None
+        self.camera = None
         self.lookat_vec = None
         self.samples = 16
         self.method = ("sppm", "")
@@ -26,7 +26,7 @@ class Scene:
         fout.write('LookAt %f %f %f  %f %f %f %f %f %f\n' % self.lookat_vec)
         stand_pt = tuple(map(int, self.lookat_vec[:3]))
 
-        fout.write(self.camera_cmd + "\n")
+        self.camera.write(fout)
 
         fout.write('Integrator "%s" %s\n' % self.method)
         fout.write('Sampler "lowdiscrepancy" "integer pixelsamples" [%d]\n' % self.samples)

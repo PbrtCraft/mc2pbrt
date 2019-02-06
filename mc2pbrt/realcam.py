@@ -16,7 +16,7 @@ class RealCam:
     """Produce a scene with radius"""
 
     def __init__(self, world_name, player_name, radius, samples,
-                       camera_cmd, phenomenons, method):
+                       camera, phenomenons, method):
         # World an be a full path or a world folder name
         if os.path.exists(world_name):
             world_path = world_name 
@@ -32,7 +32,7 @@ class RealCam:
         # parameters of scene 
         self.radius = radius
         self.samples = samples
-        self.camera_cmd = camera_cmd
+        self.camera = camera
         self.phenomenons = phenomenons
         self.method = method
 
@@ -82,7 +82,7 @@ class RealCam:
         scene.lookat_vec = self._getLookAt()
 
         scene.samples = self.samples 
-        scene.camera_cmd = self.camera_cmd 
+        scene.camera = self.camera
         scene.phenomenons = self.phenomenons
         scene.method = (self.method, "")
 

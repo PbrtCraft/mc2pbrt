@@ -1,5 +1,6 @@
 import json
 import phenomenon
+import camera
 
 from realcam import RealCam
 
@@ -20,12 +21,25 @@ if __name__ == "__main__":
         else:
             print("[Warning] %s phenomenon not found." % ph[0])
 
+    json_camera = settings.get("Camera", None)
+    if json_camera is None:
+        cam = camera.CameraPerspective()
+    else:
+        if json_camera["name"] == "perspective":
+            cam = camera.CameraPerspective(json_camera["fov"])
+        elif json_camera["name"] == "envirnment":
+            cam = camera.CameraEnvirnment()
+        elif json_camera["name"] == "realistic":
+            cam = camera.CameraRealistic()
+        else:
+            cam = camera.CameraPerspective()
+
     rc = RealCam(
         world_name = settings["World"],
         player_name = settings["Player"],
         radius = settings["Radius"],
         samples = settings.get("Samples", 16),
-        camera_cmd = settings.get("Camera", 'Camera "environment"'),
+        camera = cam,
         method = settings.get("Method", 'path'),
         phenomenons = phs,
     )
