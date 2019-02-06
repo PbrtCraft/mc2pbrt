@@ -17,13 +17,13 @@ while for server part, the user need to download the resource pack and put files
 
 Example:
 
-```
+```json
 {
   "Samples" : 256,
   "Camera" : {
-    "name" : perspective,
+    "name" : "perspective",
     "fov" : 75
-  }
+  },
   "World" : "Idea",
   "Player" : "Mudream",
   "Phenomenons" : [
@@ -47,7 +47,7 @@ Example:
 
 Here is a shorter config file:
 
-```
+```json
 {
   "World" : "Idea",
   "Player" : "Mudream",
