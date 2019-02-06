@@ -6,7 +6,7 @@ This repo is a program that can output a pbrt file by current player pose.
 To render a minecraft scene, it takes serveral steps.
 
 * First, the config file should be setuped. See **Config**.
-* Second, execute `realcam.py`.
+* Second, execute `main.py`.
 * Third, use [pbrt-v3-minecraft](https://github.com/PbrtCraft/pbrt-v3-minecraft) to render pbrt file:
     `$ ./pbrt [path-to-mc2pbrt]/scenes/[pbrtfile].pbrt`
 
@@ -20,7 +20,10 @@ Example:
 ```
 {
   "Samples" : 256,
-  "Camera" : "Camera \"perspective\"",
+  "Camera" : {
+    "name" : perspective,
+    "fov" : 75
+  }
   "World" : "Idea",
   "Player" : "Mudream",
   "Phenomenons" : [
@@ -33,14 +36,24 @@ Example:
 }
 ```
 
-* Samples: Samples per pixel
-* Camera: Pbrt camera name and parameter
-* World: World name or path
+* Samples: Samples per pixel, default value is 16.
+* Camera: Pbrt camera name and parameter, default value is a perspective camera with fov = 70.
+* World: World name (if envirnment is minecraft client) or full path
 * Player: Id of player
 * Phenomenons: A list of phenomenons, see more detail at **Phenomenons System**.
-* Method: Render method
+* Method: Render method, default is path tracing.
 * Radius: Render block radius
-* Target: Output filename
+* Target: Output filename, default is `target.pbrt`
+
+Here is a shorter config file:
+
+```
+{
+  "World" : "Idea",
+  "Player" : "Mudream",
+  "Radius" : 32,
+}
+```
 
 ### Phenomenons System
 
