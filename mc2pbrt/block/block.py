@@ -4,7 +4,7 @@ from material import Matte, Glass, Light, Foliage
 from util import pt_map
 from tuple_calculation import plus, mult, minus 
 
-class Block:
+class BlockBase:
     SOLID_BLOCK = set([
         "stone", "podzol", "clay",
     ])
@@ -57,9 +57,12 @@ class Block:
         self.name = name
         self.state = state
         self.biome_id = biome_id
+
         # [(Model, Transform)]
         self.models = []
-        self.material = None
+
+        # Default Material
+        self.material = Matte(self) 
         self.type = ""
 
         self._build()
@@ -68,18 +71,18 @@ class Block:
         return self.name == y or self.name[-len(y)-1:] == "_" + y
 
     def getLight(self):
-        if self.name in Block.NORMAL_LIGHT_MAP:
-            return Block.NORMAL_LIGHT_MAP[self.name]
+        if self.name in BlockBase.NORMAL_LIGHT_MAP:
+            return BlockBase.NORMAL_LIGHT_MAP[self.name]
 
-        if self.name in Block.CONDITION_LIGHT_MAP:
-            return Block.CONDITION_LIGHT_MAP[self.name](self)
+        if self.name in BlockBase.CONDITION_LIGHT_MAP:
+            return BlockBase.CONDITION_LIGHT_MAP[self.name](self)
 
         return 0
 
     def canPass(self):
-        if self.name in Block.SOLID_BLOCK:
+        if self.name in BlockBase.SOLID_BLOCK:
             return False
-        for t in Block.SOLID_TYPE:
+        for t in BlockBase.SOLID_TYPE:
             if self._is(t):
                 return False
         return True
@@ -103,210 +106,7 @@ class Block:
         self.type = par[6:]
 
     def _build(self):
-        if self.name == "air" or self.name == "cave_air":
-            return
-        elif self.name.find("bed") != -1:
-            return
-
-        # Setup Material
-        if self._is("glass"):
-            self.material = Glass(self)
-        elif self.getLight() and self.name not in ["torch", "wall_torch"]:
-            # Torch's ligh is hard code.
-            print(self.name)
-            self.material = Light(self)
-        elif self._is("leaves"):
-            self.material = Foliage(self)
-        else:
-            self.material = Matte(self)
-
-        # Setup Model
-        if self._is("door") or self.name in Block.LONG_PLANT:
-            if self.state["half"] == "lower":
-                self._addModel(self.name + "_bottom")
-            elif self.state["half"] == "upper":
-                self._addModel(self.name + "_top")
-
-        elif self.name == "nether_portal":
-            if self.state["axis"] == "x":
-                self._addModel("nether_portal_ns")
-            else:
-                self._addModel("nether_portal_ew")
-
-        elif self._is("slab"):
-            if self.state["type"] == "double":
-                if self._is("cobblestone_slab"):
-                    self._addModel(self.name[:-5])
-                elif self.name == "stone_slab":
-                    self._addModel("stone_slab_double")
-                elif self._is("brick_slab"):
-                    self._addModel(self.name[:-10] + "bricks")
-                else:
-                    self._addModel(self.name[:-4] + "planks")
-            elif self.state["type"] == "top":
-                self._addModel(self.name + "_top")
-            else:
-                self._addModel(self.name)
-
-        elif self._is("trapdoor"):
-            if self.state["open"] == "true":
-                self._addModel(self.name + "_open")
-            else:
-                self._addModel(self.name + "_" + self.state["half"])
-
-        elif self._is("stairs"):
-            shape = self.state["shape"]
-            transform = []
-            model_name = self.name
-            if shape[:5] in ["inner", "outer"]:
-                model_name += "_" + shape[:5]
-            if shape[-4:] == "left":
-                transform.append({"type" : "rotate", "axis" : "y", "angle" : 90})
-            if self.state["half"] == "top":
-                transform.append({"type" : "scale", "axis" : "y", "value" : -1})
-            self._addModel(model_name, transform)
-
-        elif self._is("fence") or self._is("cobblestone_wall"):
-            self._addModel(self.name + "_post")
-            side = self.name + "_side"
-            mp = {"north" : 0, "east" : 3, "south" : 2, "west" : 1}
-            for k in mp:
-                if self.state[k] == "true":
-                    self._addModel(side, [
-                        {"type" : "rotate", "axis" : "y", "angle" : 90*mp[k]}
-                    ])
-
-        elif self._is("fence_gate"):
-            x = self.name
-            if self.state["in_wall"] == "true":
-                x += "_wall"
-            if self.state["open"] == "true":
-                x += "_open"
-            self._addModel(x)
-
-        elif self.name == "iron_bars":
-            self._addModel(self.name + "_post")
-            side = self.name + "_side"
-            mp = {"north" : 0, "east" : 3, "south" : 2, "west" : 1}
-            for k in mp:
-                if self.state[k] == "true":
-                    self._addModel(side, [
-                        {"type" : "rotate", "axis" : "y", "angle" : 90*mp[k]}
-                    ])
-
-        elif self._is("glass_pane"):
-            self._addModel(self.name + "_post")
-            side = self.name + "_side"
-            mp = {"north" : 0, "east" : 3, "south" : 2, "west" : 1}
-            for k in mp:
-                if self.state[k] == "true":
-                    self._addModel(side, [
-                        {"type" : "rotate", "axis" : "y", "angle" : 90*mp[k]}
-                    ])
-
-        elif self._is("chest"):
-            pass
-
-        elif self._is("sign"):
-            pass
-
-        elif self.name in ["wheat", "beetroots"]:
-            self._addModel(self.name + ("_stage%s" % int(self.state["age"])))
-
-        elif self.name in ["potatoes", "carrots"]:
-            age = [0, 0, 1, 1, 2, 2, 2, 3][int(self.state["age"])]
-            self._addModel(self.name + ("_stage%d" % age))
-
-        elif self.name == "nether_wart":
-            age = [0, 1, 1, 2][int(self.state["age"])]
-            self._addModel("nether_wart_stage%d" % age)
-
-        elif self.name in ["melon_stem", "pumpkin_stem"]:
-            age = int(self.state["age"])
-            self._addModel(self.name + ("_stage%d" % age))
-
-        elif self.name == "cake":
-            bit = int(self.state["bites"])
-            if bit:
-                self._addModel(self.name + ("_slice%d" % bit))
-            else:
-                self._addModel(self.name)
-
-        elif self.name == "hopper":
-            if self.state["facing"] != "down":
-                self._addModel(self.name + "_side")
-            else:
-                self._addModel(self.name)
-
-        elif self.name == "farm_land":
-            if int(self.state["moisture"]) == 7:
-                self._addModel("farm_land_moist")
-            else:
-                self._addModel("farm_land")
-
-        elif self.name == "snow":
-            h = int(self.state["layers"])
-            if h == 8:
-                self._addModel("snow_block")
-            else:
-                self._addModel("snow_height%d" % (h*2))
-
-        elif self.name == "redstone_wire":
-            # TODO : d[0] = "redstone_dust_dot"
-            pass
-        elif self.name == "repeater":
-            # TODO : d[0] += "_1tick"
-            pass
-        elif self.name == "tripwire":
-            # TODO
-            pass
-        elif self.name == "fire":
-            self._addModel("fire_floor0")
-
-        elif self.name == "end_gateway":
-            # TODO
-            pass
-        elif self.name == "torch":
-            self._addModel("torch")
-            # Hard-code fire part
-            face = {
-                "uv": (0, 0, 1, 1),
-                "texture": "block/sea_lantern"
-            }
-            eps = tuple([.001]*3)
-            fire = {
-                "elements": [{
-                    "from": minus((7/16, 8/16, 7/16), eps),
-                    "to": plus((9/16, 10/16, 9/16), eps),
-                    "faces": {
-                        key : face for key in ["up", "down", "west", "east", "north", "south"]
-                    }
-                }]
-            }
-            self.models.append((fire, [], Light(self)))
-
-        elif self.name == "wall_torch":
-            self._addModel("wall_torch")
-            # Hard-code fire part
-            face = {
-                "uv": (0, 0, 1, 1),
-                "texture": "block/sea_lantern"
-            }
-            eps = tuple([.001]*3)
-            fire = {
-                "elements": [{
-                    "from": minus((-1/16, 11.5/16, 7/16), eps),
-                    "to": plus((1/16, 13.5/16, 9/16), eps),
-                    "rotation": { "origin": [ 0, 3.5, 8 ], "axis": "z", "angle": -22.5 },
-                    "faces": {
-                        key : face for key in ["up", "down", "west", "east", "north", "south"]
-                    }
-                }]
-            }
-            self.models.append((fire, [], Light(self)))
-
-        else:
-            self._addModel(self.name)
+        raise NotImplementedError("BlockBase._build")
 
     def _writeElement(self, fout, ele, material):
         from_pt = ele["from"]
