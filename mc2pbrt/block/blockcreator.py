@@ -98,8 +98,7 @@ class BlockCreator:
             return BlockNotImplement(name, state, biome_id)
 
         elif name == "fire":
-            # TODO
-            return BlockNotImplement(name, state, biome_id)
+            return BlockFire(name, state, biome_id)
 
         elif name == "end_gateway":
             # TODO

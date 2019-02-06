@@ -43,7 +43,13 @@ class RealCam:
 
     def _getBlocks(self):
         """Get blocks by radius"""
-        world = World(self.world_path)
+
+        # Determine folder of dim
+        dim_path = self.world_path
+        if self.player.dim != 0:
+            dim_path = os.path.join(self.world_path, "DIM%d" % self.player.dim)
+        world = World(dim_path)
+
         r = self.radius
         sz = 2*r+1
         ys = list(range(1, 256))

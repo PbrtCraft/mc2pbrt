@@ -15,6 +15,7 @@ class Player:
 
         self.pos = [c.get() for c in p_data.get("Pos").children]
         self.rot = [c.get() for c in p_data.get("Rotation").children]
+        self.dim = p_data.get("Dimension").get()
 
     def _uuid_to_filename(self, uuid):
         return "-".join([uuid[:8], uuid[8:12], uuid[12:16], uuid[16:20], uuid[20:]])

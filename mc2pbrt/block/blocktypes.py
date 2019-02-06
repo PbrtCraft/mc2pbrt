@@ -202,3 +202,8 @@ class BlockGlass(BlockBase):
     def build(self):
         self.material = Glass(self)
         self.addModel(self.name)
+
+class BlockFire(BlockBase):
+    def build(self):
+        self.material = Light(self)
+        self.addModel("fire_floor0") 

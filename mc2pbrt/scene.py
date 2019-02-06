@@ -1,5 +1,6 @@
-from water import WaterSolver
 from block import BlockSolver
+from water import WaterSolver
+from lava import LavaSolver
 
 class Scene:
     def __init__(self, block):
@@ -35,10 +36,13 @@ class Scene:
         for phenomenon in self.phenomenons:
             phenomenon.write(fout)
 
+        block_solver = BlockSolver(self.block)
+        block_solver.write(fout, stand_pt)
+
         water_solver = WaterSolver(self.block)
         water_solver.write(fout)
 
-        block_solver = BlockSolver(self.block)
-        block_solver.write(fout, stand_pt)
+        lava_solver = LavaSolver(self.block)
+        lava_solver.write(fout)
 
         fout.write('WorldEnd\n')
