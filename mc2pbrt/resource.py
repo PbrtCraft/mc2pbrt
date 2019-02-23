@@ -37,6 +37,11 @@ class ResourceManager:
         return self.table_alpha[texture_fn]
 
     def setup(self):
+        """Setup all resource"""
+        self.setupModelAndTexture()
+        self.setupFire()
+
+    def setupModelAndTexture(self):
         """
            1. Copy Model.json into folder
            2. Copy Texture into folder
@@ -69,6 +74,17 @@ class ResourceManager:
                 for filename in tqdm(os.listdir(texture_dir), ascii=True):
                     full_filename = os.path.join(texture_dir, filename)
                     shutil.copy(full_filename, self.local_texture_folder)
+
+    def setupFire(self):
+        """Setup cropped fire texture"""
+        fire = os.path.join(self.local_texture_folder, "fire.png")
+        if os.path.isfile(fire):
+            return
+        fire_source = os.path.join(self.local_texture_folder, "fire_0.png")
+        img = Image.open(fire_source)
+        area = (0, 0, 16, 16)
+        cropped_img = img.crop(area)
+        cropped_img.save(fire)
 
     def checkModelFolder(self):
         """Check if the folder has model json file
