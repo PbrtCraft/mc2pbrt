@@ -53,7 +53,7 @@ class LavaSolver:
         print("Writing lava blocks...")
         
         fout.write('AttributeBegin\n')
-        fout.write('AreaLightSource "diffuse" "rgb L" [ 5. 0. 0 ]')
+        fout.write('AreaLightSource "diffuse" "blackbody L" [1400 100]')
 
         for x, y, z in tqdmpos(range(self.X), range(self.Y), range(self.Z)):
             if self.level[y][z][x] == None: continue
