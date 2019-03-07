@@ -97,6 +97,10 @@ class BlockCreator:
             # TODO
             return BlockNotImplement(name, state, biome_id)
 
+        elif name == "bubble_column":
+            # TODO
+            return BlockNotImplement(name, state, biome_id)
+
         elif name == "fire":
             return BlockFire(name, state, biome_id)
 

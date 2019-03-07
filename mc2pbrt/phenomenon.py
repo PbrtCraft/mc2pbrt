@@ -24,6 +24,23 @@ class Fog:
         fout.write('MediumInterface "" "Fog"\n')
 
 
+class Rayleigh:
+    """
+        Sky's Rayleigh scattering
+        Take 680, 550, 440 nm light as RGB
+        From **Physically Based Sky, Atmosphere and Cloud Rendering in Frostbite**
+    """
+    def __init__(self):
+        from math import e
+        self.I_s = (5.8*e**(-6), 1.35*e**(-5), 3.31*e**(-5))
+
+    def write(self, fout):
+        fout.write('MakeNamedMedium "Rayleigh" "string type" "homogeneous" ' +
+                   '"rgb sigma_s" [%f %f %f]\n' % self.I_s +
+                   '"rgb sigma_a" [0 0 0]\n')
+        fout.write('MediumInterface "" "Rayleigh"\n')
+
+
 class Sun:
     def __init__(self, hour, scene_radius): 
         if hour < 6 or hour > 18:

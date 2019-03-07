@@ -12,6 +12,8 @@ if __name__ == "__main__":
     for ph in settings.get("Phenomenons", []):
         if ph[0] == "Fog":
             phs.append(phenomenon.Fog(ph[1], ph[2]))
+        if ph[0] == "Rayleigh":
+            phs.append(phenomenon.Rayleigh())
         elif ph[0] == "EnvLight":
             phs.append(phenomenon.EnvirnmentMap(ph[1]))
         elif ph[0] == "Sun":
