@@ -50,20 +50,23 @@ class Chunk:
         sections = {}
         level_node = raw_nbt.get('Level')
         for section in level_node.get('Sections').children:
-            flatstates = [c.get() for c in section.get('BlockStates').children]
-            pack_size = int((len(flatstates) * 64) / (16**3))
-            states = [
-                Chunk._read_width_from_loc(flatstates, pack_size, i) for i in range(16**3)
-            ]
-            palette = [ 
-                BlockState(
-                    state.get('Name').get(),
-                    state.get('Properties').to_dict() if state.has('Properties') else {}
-                ) for state in section.get('Palette').children
-            ]
-            blocks = [
-                Block(palette[state]) for state in states
-            ]
+            if section.has('BlockStates'):
+                flatstates = [c.get() for c in section.get('BlockStates').children]
+                pack_size = int((len(flatstates) * 64) / (16**3))
+                states = [
+                    Chunk._read_width_from_loc(flatstates, pack_size, i) for i in range(16**3)
+                ]
+                palette = [
+                    BlockState(
+                        state.get('Name').get(),
+                        state.get('Properties').to_dict() if state.has('Properties') else {}
+                    ) for state in section.get('Palette').children
+                ]
+                blocks = [
+                    Block(palette[state]) for state in states
+                ]
+            else:
+                blocks = [Block.AIR]*(16**3)
             sections[section.get('Y').get()] = ChunkSection(blocks, section, section.get('Y').get())
 
         self.sections = sections
