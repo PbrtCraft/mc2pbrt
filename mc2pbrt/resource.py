@@ -6,9 +6,10 @@ import json
 from tqdm import tqdm
 from PIL import Image
 
-from tuple_calculation import mult 
+from tuple_calculation import mult
 from find_minecraft import getMinecraftFolder
 from util import singleton
+
 
 @singleton
 class ResourceManager:
@@ -30,7 +31,8 @@ class ResourceManager:
             Texture has alpha channel or not.
         """
         if texture_fn not in self.table_alpha:
-            full_filename = os.path.join(self.local_texture_folder, "..", texture_fn)
+            full_filename = os.path.join(
+                self.local_texture_folder, "..", texture_fn)
             image = Image.open(full_filename)
             self.table_alpha[texture_fn] = len(image.mode) == 4
 
@@ -55,14 +57,19 @@ class ResourceManager:
 
         minecraft_dir = getMinecraftFolder()
         version = "1.13.2"
-        version_file = os.path.join(minecraft_dir, "versions", version, version + ".jar")
+        version_file = os.path.join(
+            minecraft_dir, "versions", version, version + ".jar")
+        if not os.path.exists(version_file):
+            print("Please input version resource file:")
+            version_file = input()
         with tempfile.TemporaryDirectory() as temp_dir:
             with zipfile.ZipFile(version_file, 'r') as vzip:
                 vzip.extractall(temp_dir)
 
             if not has_model:
                 print("Copy model json files...", )
-                block_model_dir = os.path.join(temp_dir, "assets", "minecraft", "models", "block")
+                block_model_dir = os.path.join(
+                    temp_dir, "assets", "minecraft", "models", "block")
                 for filename in tqdm(os.listdir(block_model_dir), ascii=True):
                     if filename.endswith(".json"):
                         full_filename = os.path.join(block_model_dir, filename)
@@ -70,7 +77,8 @@ class ResourceManager:
 
             if not has_texture:
                 print("Copy texture files...")
-                texture_dir = os.path.join(temp_dir, "assets", "minecraft", "textures", "block")
+                texture_dir = os.path.join(
+                    temp_dir, "assets", "minecraft", "textures", "block")
                 for filename in tqdm(os.listdir(texture_dir), ascii=True):
                     full_filename = os.path.join(texture_dir, filename)
                     shutil.copy(full_filename, self.local_texture_folder)
@@ -92,7 +100,8 @@ class ResourceManager:
         Returns:
             Model json file is ready or not
         """
-        json_list = [fn for fn in os.listdir(self.local_model_folder) if fn.endswith(".json")]
+        json_list = [fn for fn in os.listdir(
+            self.local_model_folder) if fn.endswith(".json")]
         # Check with hash function ?
         return len(json_list) > 0
 
@@ -103,18 +112,20 @@ class ResourceManager:
             Texture image file is ready or not
         """
 
-        png_list = [fn for fn in os.listdir(self.local_texture_folder) if fn.endswith(".png")]
+        png_list = [fn for fn in os.listdir(
+            self.local_texture_folder) if fn.endswith(".png")]
         # Check with hash function ?
         return len(png_list) > 0
 
 
 class ModelLoader:
-    def __init__(self, path = "."):
+    def __init__(self, path="."):
         self.path = path
         self.db = {}
 
     def _resolveTexture(self, data, texname):
-        if texname[0] != '#' : return texname
+        if texname[0] != '#':
+            return texname
         if "textures" in data and texname[1:] in data["textures"]:
             return data["textures"][texname[1:]]
         return texname
@@ -124,7 +135,8 @@ class ModelLoader:
             for ele in data["elements"]:
                 for facename in ele["faces"]:
                     face = ele["faces"][facename]
-                    face["texture"] = self._resolveTexture(data, face["texture"])
+                    face["texture"] = self._resolveTexture(
+                        data, face["texture"])
             return True
         return False
 
@@ -136,23 +148,23 @@ class ModelLoader:
             return True
         return False
 
-    def _getModel(self, name): 
+    def _getModel(self, name):
         with open(self.path + "/" + name + ".json", "r") as f:
             data = json.load(f)
-        
+
         self._resolveElements(data)
-            
+
         if "parent" in data and data["parent"] not in ["block/block", "block/thin_block"]:
-            par_data, par = self._getModel(data["parent"])
+            par_data, unused = self._getModel(data["parent"])
             if "textures" in data:
                 if "textures" not in par_data:
                     par_data["textures"] = {}
                 for tex in data["textures"]:
                     par_data["textures"][tex] = data["textures"][tex]
-            
+
             flag_eles = self._resolveElements(par_data)
             flag_texs = self._resolveTextures(par_data)
-            if flag_eles or flag_texs: 
+            if flag_eles or flag_texs:
                 return par_data, data["parent"]
         return data, ""
 

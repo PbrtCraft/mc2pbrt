@@ -1,6 +1,7 @@
 from util import singleton
 from block.block import BlockBase
-from block.blocktypes import * 
+from block.blocktypes import *
+
 
 @ singleton
 class BlockCreator:
@@ -13,8 +14,11 @@ class BlockCreator:
             self.db[key] = self._create(name, state, biome_id)
         return self.db[key]
 
-    def _create(self, name, state, biome_id): 
-        check = lambda y: name == y or name[-len(y)-1:] == "_" + y
+    def _create(self, name, state, biome_id):
+        def check(y): return name == y or name[-len(y)-1:] == "_" + y
+
+        def prefix(y):
+            return len(name) >= len(y)+1 and name[:len(y)+1] == y + "_"
 
         if name in ["air", "cave_air"]:
             return BlockAir(name, state, biome_id)
@@ -32,6 +36,13 @@ class BlockCreator:
         elif check("glass"):
             return BlockGlass(name, state, biome_id)
 
+        elif check("banner"):
+            # TODO
+            return BlockNotImplement(name, state, biome_id)
+
+        elif prefix("infested"):
+            return BlockNormal(name[9:], state, biome_id)
+
         elif name == "nether_portal":
             return BlockNetherPortal(name, state, biome_id)
 
@@ -44,7 +55,7 @@ class BlockCreator:
         elif check("stairs"):
             return BlockStairs(name, state, biome_id)
 
-        elif check("fence") or check("cobblestone_wall"):
+        elif check("fence") or check("wall"):
             return BlockFenceType(name, state, biome_id)
 
         elif check("fence_gate"):
@@ -66,11 +77,11 @@ class BlockCreator:
             return BlockStages(name, state, biome_id)
 
         elif name in ["potatoes", "carrots"]:
-            stage = lambda x: [0, 0, 1, 1, 2, 2, 2, 3][x]
+            def stage(x): return [0, 0, 1, 1, 2, 2, 2, 3][x]
             return BlockStages(name, state, biome_id, stage)
 
         elif name == "nether_wart":
-            stage = lambda x: [0, 1, 1, 2][x]
+            def stage(x): return [0, 1, 1, 2][x]
             return BlockStages(name, state, biome_id, stage)
 
         elif name == "cake":
@@ -98,6 +109,22 @@ class BlockCreator:
             return BlockNotImplement(name, state, biome_id)
 
         elif name == "bubble_column":
+            # TODO
+            return BlockNotImplement(name, state, biome_id)
+
+        elif name == "scaffolding":
+            # TODO
+            return BlockNotImplement(name, state, biome_id)
+
+        elif name == "bamboo":
+            # TODO
+            return BlockNotImplement(name, state, biome_id)
+
+        elif name == "sweet_berry_bush":
+            # TODO
+            return BlockNotImplement(name, state, biome_id)
+
+        elif name == "cocoa":
             # TODO
             return BlockNotImplement(name, state, biome_id)
 
