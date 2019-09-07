@@ -14,10 +14,36 @@ from util import singleton
 @singleton
 class ResourceManager:
     def __init__(self):
-        self.local_model_folder = os.path.join(".", "models", "block")
-        self.model_loader = ModelLoader(os.path.join(".", "models"))
-        self.local_texture_folder = os.path.join("..", "scenes", "block")
-        self.scene_folder = os.path.join("..", "scenes")
+        work_dir = os.getcwd()
+        if os.path.exists(os.path.join(work_dir, "resource.json")):
+            with open("resource.json") as f:
+                config = json.load(f)
+        else:
+            config = {}
+
+        def get(key, default_value):
+            if key in config:
+                return config[key]
+            else:
+                return default_value
+
+        self.local_model_folder = (
+            os.path.join(work_dir,
+                         get("LocalModelFolder", os.path.join(".", "models", "block"))))
+        self.model_loader = ModelLoader(
+            os.path.join(work_dir,
+                         get("ModelLoaderPath", os.path.join(".", "models"))))
+        self.local_texture_folder = (
+            os.path.join(work_dir,
+                         get("SceneTextureFolder", os.path.join(".", "scenes", "block"))))
+        self.scene_folder = (
+            os.path.join(work_dir,
+                         get("SceneFolder", os.path.join(".", "scenes"))))
+
+        os.makedirs(self.local_model_folder, exist_ok=True)
+        os.makedirs(self.local_texture_folder, exist_ok=True)
+
+        self.version_jar = os.path.join(work_dir, get("VersionJar", ""))
         self.setup()
 
         self.table_alpha = {}
@@ -43,6 +69,26 @@ class ResourceManager:
         self.setupModelAndTexture()
         self.setupFire()
 
+    def setupVersionJar(self):
+        """Get path of version jar"""
+        if self.version_jar:
+            if not os.path.isfile(self.version_jar):
+                print("[Warning] %s does not exist." % self.version_jar)
+                self.version_jar = ""
+            else:
+                return
+
+        minecraft_dir = getMinecraftFolder()
+        version = "1.13.2"
+        version_file = os.path.join(
+            minecraft_dir, "versions", version, version + ".jar")
+        if not os.path.exists(version_file):
+            print(
+                "Default file path [%s] does not exist. Please input version resource file:" % version_file)
+            version_file = input()
+
+        self.version_jar = version_file
+
     def setupModelAndTexture(self):
         """
            1. Copy Model.json into folder
@@ -55,15 +101,9 @@ class ResourceManager:
         if has_model and has_texture:
             return
 
-        minecraft_dir = getMinecraftFolder()
-        version = "1.13.2"
-        version_file = os.path.join(
-            minecraft_dir, "versions", version, version + ".jar")
-        if not os.path.exists(version_file):
-            print("Please input version resource file:")
-            version_file = input()
+        self.setupVersionJar()
         with tempfile.TemporaryDirectory() as temp_dir:
-            with zipfile.ZipFile(version_file, 'r') as vzip:
+            with zipfile.ZipFile(self.version_jar, 'r') as vzip:
                 vzip.extractall(temp_dir)
 
             if not has_model:

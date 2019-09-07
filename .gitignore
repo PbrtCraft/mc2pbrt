@@ -1,16 +1,6 @@
-# Example file
-config.json
-
-# Output pbrt file
-*.pbrt
-
 # Python
 *.pyc
 __pycache__
-
-# Resource
-scenes/block/*.png
-scenes/block/*.png.mcmeta
 
 # pyinstaller
 dist/

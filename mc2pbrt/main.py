@@ -1,3 +1,4 @@
+import sys
 import json
 import phenomenon
 import camera
@@ -6,7 +7,7 @@ from realcam import RealCam
 
 
 if __name__ == "__main__":
-    with open("config.json", "r") as f:
+    with open(sys.argv[1], "r") as f:
         settings = json.load(f)
 
     phs = []
