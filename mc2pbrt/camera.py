@@ -1,5 +1,5 @@
 class CameraPerspective:
-    def __init__(self, fov = 70):
+    def __init__(self, fov=70):
         self.fov = fov
 
     def write(self, fout):

@@ -4,6 +4,7 @@ import camera
 
 from realcam import RealCam
 
+
 if __name__ == "__main__":
     with open("config.json", "r") as f:
         settings = json.load(f)
@@ -37,13 +38,13 @@ if __name__ == "__main__":
             cam = camera.CameraPerspective()
 
     rc = RealCam(
-        world_name = settings["World"],
-        player_name = settings["Player"],
-        radius = settings["Radius"],
-        samples = settings.get("Samples", 16),
-        camera = cam,
-        method = settings.get("Method", 'path'),
-        phenomenons = phs,
+        world_name=settings["World"],
+        player_name=settings["Player"],
+        radius=settings["Radius"],
+        samples=settings.get("Samples", 16),
+        camera=cam,
+        method=settings.get("Method", 'path'),
+        phenomenons=phs,
     )
 
     rc.run(settings.get("Target", "target.pbrt"))

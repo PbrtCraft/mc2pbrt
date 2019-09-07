@@ -2,7 +2,20 @@ from resource import ResourceManager
 from material import Matte
 
 from util import pt_map
-from tuple_calculation import plus, mult, minus 
+from tuple_calculation import plus, mult, minus
+
+
+def sea_pickle(b):
+    """ Sea pickle's light """
+    if b.state["waterlogged"] == "false":
+        return 0
+    return [0, 6, 9, 12, 15][int(b.state["pickles"])]
+
+
+def lit(l):
+    """ Return a lambda that just determine whether the block's "lit" is on """
+    return (lambda b: [0, l][b.state["lit"] == "true"])
+
 
 class BlockBase:
     SOLID_BLOCK = set([
@@ -16,43 +29,34 @@ class BlockBase:
                       "peony", "tall_grass", "large_fern"])
 
     NORMAL_LIGHT_MAP = {
-        "beacon" : 15,
-        "end_portal" : 15,
-        "fire" : 15,
-        "glowstone" : 15,
-        "jack_o_lantern" : 15,
-        "lava" : 15,
-        "sea_lantern" : 15,
-        "conduit" : 15,
-        "end_rod" : 14,
-        "torch" : 14*8,
-        "wall_torch" : 14*8,
-        "nether_portal" : 11,
-        "ender_chest" : 7,
-        "magma_block" : 3,
-        "brewing_stand" : 1,
-        "brown_mushroom" : 1,
-        "dragon_egg" : 1,
-        "end_portal_frame" : 1,
+        "beacon": 15,
+        "end_portal": 15,
+        "fire": 15,
+        "glowstone": 15,
+        "jack_o_lantern": 15,
+        "lava": 15,
+        "sea_lantern": 15,
+        "conduit": 15,
+        "end_rod": 14,
+        "torch": 14*8,
+        "wall_torch": 14*8,
+        "nether_portal": 11,
+        "ender_chest": 7,
+        "magma_block": 3,
+        "brewing_stand": 1,
+        "brown_mushroom": 1,
+        "dragon_egg": 1,
+        "end_portal_frame": 1,
     }
-
-    # Sea pickle's light
-    def sea_pickle(b):
-        if b.state["waterlogged"] == "false":
-            return 0
-        return [0, 6, 9, 12, 15][int(b.state["pickles"])]
-
-    # Return a lambda that just determine whether the block's "lit" is on
-    lit = lambda l: (lambda b: [0, l][b.state["lit"] == "true"])
 
     CONDITION_LIGHT_MAP = {
-        "sea_pickle" : sea_pickle,
-        "furnace" : lit(13),
-        "redstone_ore" : lit(9),
-        "redstone_lamp" : lit(15),
-        "redstone_torch" : lit(7),
+        "sea_pickle": sea_pickle,
+        "furnace": lit(13),
+        "redstone_ore": lit(9),
+        "redstone_lamp": lit(15),
+        "redstone_torch": lit(7),
     }
-    
+
     def __init__(self, name, state, biome_id):
         self.name = name
         self.state = state
@@ -62,7 +66,7 @@ class BlockBase:
         self.models = []
 
         # Default Material
-        self.material = Matte(self) 
+        self.material = Matte(self)
         self.type = ""
 
         self.build()
@@ -96,7 +100,7 @@ class BlockBase:
             return None, None
         return model, par
 
-    def addModel(self, name, _transforms=None, _material = None):
+    def addModel(self, name, _transforms=None, _material=None):
         mdl, par = self._getModel(name)
         if not mdl:
             return
@@ -122,13 +126,14 @@ class BlockBase:
             axis = rot["axis"]
             org = minus(mid, mult(rot["origin"], 1./16))
             ang = rot["angle"]
-            rxyz = {"x" : (1, 0, 0), "y" : (0, 1, 0), "z" : (0, 0, 1)}
-            sxyz = {"x" : (0, 1, 1), "y" : (1, 0, 1), "z" : (1, 1, 0)}
+            rxyz = {"x": (1, 0, 0), "y": (0, 1, 0), "z": (0, 0, 1)}
+            sxyz = {"x": (0, 1, 1), "y": (1, 0, 1), "z": (1, 1, 0)}
             fout.write("Translate %f %f %f\n" % mult(org, -1))
             fout.write(("Rotate %f " % ang) + ("%d %d %d\n" % rxyz[axis]))
             if "rescale" in rot and rot["rescale"]:
                 scale = 1/math.cos(ang/180.*math.pi)
-                fout.write("Scale %f %f %f\n" % plus(mult(sxyz[axis], scale), rxyz[axis]))
+                fout.write("Scale %f %f %f\n" %
+                           plus(mult(sxyz[axis], scale), rxyz[axis]))
             fout.write("Translate %f %f %f\n" % org)
 
         for facename in ele["faces"]:
@@ -141,9 +146,10 @@ class BlockBase:
             fout.write('AttributeBegin\n')
 
             if "rotation" in face:
-                rxyz = {"x" : (1, 0, 0), "y" : (0, 1, 0), "z" : (0, 0, 1)}
+                rxyz = {"x": (1, 0, 0), "y": (0, 1, 0), "z": (0, 0, 1)}
                 # shape[-1] should be "x", "y" or "z"
-                fout.write(("Rotate %f " % (face["rotation"]*dir_)) + ("%d %d %d\n" % rxyz[shape[-1]]))
+                fout.write(
+                    ("Rotate %f " % (face["rotation"]*dir_)) + ("%d %d %d\n" % rxyz[shape[-1]]))
 
             if material:
                 material.write(fout, face)
@@ -164,21 +170,22 @@ class BlockBase:
     def _writeRotate(self, fout, axis, ang):
         org = (.5, .5, .5)
         fout.write("Translate %f %f %f\n" % org)
-        rxyz = {"x" : (1, 0, 0), "y" : (0, 1, 0), "z" : (0, 0, 1)}
+        rxyz = {"x": (1, 0, 0), "y": (0, 1, 0), "z": (0, 0, 1)}
         fout.write(("Rotate %f " % ang) + ("%d %d %d\n" % rxyz[axis]))
         fout.write("Translate %f %f %f\n" % mult(org, -1))
 
     def _writeScale(self, fout, axis, s):
         org = (.5, .5, .5)
         fout.write("Translate %f %f %f\n" % org)
-        axis_v = {"x" : (1, 0, 0), "y" : (0, 1, 0), "z" : (0, 0, 1)}
-        sixa_v = {"x" : (0, 1, 1), "y" : (1, 0, 1), "z" : (1, 1, 0)}
-        fout.write(("Scale %f %f %f\n" % plus(mult(axis_v[axis], s), sixa_v[axis])))
+        axis_v = {"x": (1, 0, 0), "y": (0, 1, 0), "z": (0, 0, 1)}
+        sixa_v = {"x": (0, 1, 1), "y": (1, 0, 1), "z": (1, 1, 0)}
+        fout.write(("Scale %f %f %f\n" %
+                    plus(mult(axis_v[axis], s), sixa_v[axis])))
         fout.write("Translate %f %f %f\n" % mult(org, -1))
 
     def write(self, fout):
         """Write file with pbrt format
-        
+
         Args:
             fout: file object
         Returns:
@@ -199,11 +206,11 @@ class BlockBase:
         if "facing" in self.state:
             facing = self.state["facing"]
             if self.type == "orientable":
-                mp = {"north" : 0, "east" : 1, "south" : 2, "west" : 3}
+                mp = {"north": 0, "east": 1, "south": 2, "west": 3}
             elif self.type == "template_piston":
-                mp = {"north" : 2, "east" : 3, "south" : 0, "west" : 1}
+                mp = {"north": 2, "east": 3, "south": 0, "west": 1}
             else:
-                mp = {"north" : 1, "east" : 0, "south" : 3, "west" : 2}
+                mp = {"north": 1, "east": 0, "south": 3, "west": 2}
 
             if facing in mp:
                 self._writeRotate(fout, "y", mp[facing]*90)
@@ -211,7 +218,7 @@ class BlockBase:
                 self._writeRotate(fout, "z", -90)
             elif facing == "top":
                 self._writeRotate(fout, "z", 90)
-        
+
         for model, transforms, material in self.models:
             for t in transforms:
                 if t["type"] == "rotate":
@@ -230,9 +237,9 @@ class BlockBase:
 
     def getUsedTexture(self):
         used_texture = set()
-        for model, transform, material in self.models:
+        for model, dummy_1, dummy_2 in self.models:
             for ele in model["elements"]:
-                for facename in ele["faces"]: 
+                for facename in ele["faces"]:
                     face = ele["faces"][facename]
                     tex = face["texture"]
                     if tex[0] == '#':

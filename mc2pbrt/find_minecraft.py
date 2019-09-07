@@ -2,6 +2,7 @@ import os
 import sys
 import errno
 
+
 def getMinecraftFolder():
     """Get Miencraft Client Folder"""
     minecraft_dir = ""

@@ -1,5 +1,6 @@
 import biome
 
+
 class Foliage:
     def __init__(self, block):
         self.block = block
@@ -52,6 +53,7 @@ class Glass:
 
 class Light:
     FULL_LIGHT = 5.
+
     def __init__(self, block):
         self.block = block
 
@@ -60,4 +62,4 @@ class Light:
         light = self.block.getLight()
         le = (light/15.)**2*Light.FULL_LIGHT
         fout.write(('AreaLightSource "texlight" "texture L" "%s-color"' % tex) +
-                    '"rgb scale" [%f %f %f]\n' % (le, le, le))
+                   '"rgb scale" [%f %f %f]\n' % (le, le, le))

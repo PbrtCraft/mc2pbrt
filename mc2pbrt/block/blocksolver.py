@@ -1,6 +1,7 @@
 from resource import ResourceManager
 from tuple_calculation import plus_i, mult_i
 
+
 class BlockSolver:
     """Write all solid block in the scene"""
 
@@ -22,30 +23,37 @@ class BlockSolver:
         for x in range(self.X):
             for y in range(self.Y):
                 for z in range(self.Z):
-                    self.used_texture = self.used_texture | self.block[y][z][x].getUsedTexture()
+                    self.used_texture = self.used_texture | self.block[y][z][x].getUsedTexture(
+                    )
 
     def write(self, fout, start_pt):
         print("Writing solid blocks...")
         for fn in self.used_texture:
-            fout.write('Texture "%s-color" "spectrum" "imagemap" "string filename" "%s.png"\n' % (fn, fn))
+            fout.write(
+                'Texture "%s-color" "spectrum" "imagemap" "string filename" "%s.png"\n' % (fn, fn))
             if ResourceManager().hasAlpha(fn + ".png"):
-                fout.write('Texture "%s-alpha" "float" "imagemap" "bool alpha" "true" "string filename" "%s.png"\n' % (fn, fn))
+                fout.write(
+                    'Texture "%s-alpha" "float" "imagemap" "bool alpha" "true" "string filename" "%s.png"\n' % (fn, fn))
 
         import queue
         que = queue.Queue()
         rendered = set()
-        deltas = [(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)]
+        deltas = [(1, 0, 0), (-1, 0, 0), (0, 1, 0),
+                  (0, -1, 0), (0, 0, 1), (0, 0, -1)]
         que.put(start_pt)
         for delta in deltas:
             next_pt = plus_i(delta, start_pt)
-            if not self._inBlock(next_pt): continue
+            if not self._inBlock(next_pt):
+                continue
             que.put(next_pt)
 
         cnt = 0
         while not que.empty():
             pt = que.get()
-            if not self._inBlock(pt): continue
-            if pt in rendered: continue
+            if not self._inBlock(pt):
+                continue
+            if pt in rendered:
+                continue
             rendered.add(pt)
             x, y, z = pt
             b = self.block[y][z][x]
@@ -58,9 +66,9 @@ class BlockSolver:
             if b.canPass():
                 for delta in deltas:
                     next_pt = plus_i(delta, pt)
-                    if not self._inBlock(next_pt): continue
-                    if next_pt in rendered: continue
+                    if not self._inBlock(next_pt):
+                        continue
+                    if next_pt in rendered:
+                        continue
                     que.put(next_pt)
         print("Render", cnt, "blocks")
-
-

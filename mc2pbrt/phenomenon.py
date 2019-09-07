@@ -30,6 +30,7 @@ class Rayleigh:
         Take 680, 550, 440 nm light as RGB
         From **Physically Based Sky, Atmosphere and Cloud Rendering in Frostbite**
     """
+
     def __init__(self):
         from math import e
         self.I_s = (5.8*e**(-6), 1.35*e**(-5), 3.31*e**(-5))
@@ -42,7 +43,7 @@ class Rayleigh:
 
 
 class Sun:
-    def __init__(self, hour, scene_radius): 
+    def __init__(self, hour, scene_radius):
         if hour < 6 or hour > 18:
             raise ValueError("Hour should be in the range of [6, 18]")
 
@@ -52,7 +53,7 @@ class Sun:
         mid = scene_radius
         self.position = (mid + dist*sin(theta), dist*cos(theta), mid)
 
-        # Empirical formula 
+        # Empirical formula
         self.scale = 50./(80**2)*(dist**2)
 
     def write(self, fout):
@@ -67,17 +68,18 @@ class Rain:
 
     def write(self, fout):
         from random import uniform, randint
-        from tqdm import tqdm 
+        from tqdm import tqdm
         from util import tqdmpos
 
-        uni01 = lambda x: uniform(0, 1)
+        def uni01(x): return uniform(0, 1)
 
         print("Preparing rain instance...")
         fout.write('AttributeBegin\n')
-        fout.write('Material "glass" "float eta" [1.33] "rgb Kt" [.28 .72 1]\n')
+        fout.write(
+            'Material "glass" "float eta" [1.33] "rgb Kt" [.28 .72 1]\n')
         for i in tqdm(range(100), ascii=True):
             fout.write('ObjectBegin "RainStreak%02d"\n' % i)
-            for j in range(100*self.rainfall):
+            for dummy_1 in range(100*self.rainfall):
                 fout.write('AttributeBegin\n')
                 x, y, z = map(uni01, [None]*3)
                 l = uniform(0, 0.1)
@@ -89,9 +91,9 @@ class Rain:
 
         # Pbrt cylinder is z-base.
         fout.write('ConcatTransform [1 0 0 0 ' +
-                                    '0 0 1 0 ' +
-                                    '0 1 0 0 ' +
-                                    '0 0 0 1]\n')
+                   '0 0 1 0 ' +
+                   '0 1 0 0 ' +
+                   '0 0 0 1]\n')
         sz = self.size
         print("Writing rain streaks...")
         for x, y, z in tqdmpos(range(sz), range(sz), range(256)):

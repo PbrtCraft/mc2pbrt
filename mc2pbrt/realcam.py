@@ -12,14 +12,15 @@ from block import BlockCreator
 
 from util import tqdmpos
 
+
 class RealCam:
     """Produce a scene with radius"""
 
     def __init__(self, world_name, player_name, radius, samples,
-                       camera, phenomenons, method):
+                 camera, phenomenons, method):
         # World an be a full path or a world folder name
         if os.path.exists(world_name):
-            world_path = world_name 
+            world_path = world_name
         else:
             world_path = os.path.join(find_minecraft.getMinecraftFolder(),
                                       "saves", world_name)
@@ -27,9 +28,9 @@ class RealCam:
                 raise FileNotFoundError(errno.ENOENT, "World not found.")
         print("Get world:", world_path)
         self.world_path = world_path
-        self.player = Player(self.world_path, player_name) 
+        self.player = Player(self.world_path, player_name)
 
-        # parameters of scene 
+        # parameters of scene
         self.radius = radius
         self.samples = samples
         self.camera = camera
@@ -62,14 +63,15 @@ class RealCam:
             bs = world.get_block((isx+dx, y, isz+dz)).state
             biome_id = world.get_biome((isx+dx, y, isz+dz))
             name = bs.name[10:]
-            arr[y-ys[0]][r + dz][r + dx] = BlockCreator()(name, bs.props, biome_id)
+            arr[y-ys[0]][r + dz][r + dx] = BlockCreator()(name, bs.props,
+                                                          biome_id)
 
         return arr
 
     def _getLookAt(self):
         """Get lookat vector by pos of player"""
         r = self.radius
-        isx, isy, isz = map(int, self.player.pos)
+        isx, dummy_1, isz = map(int, self.player.pos)
         vec = lookat.firstPerson(self.player)
         dx, dz = isx - r, isz - r
         return (vec[0] - dx, vec[1], vec[2] - dz,
@@ -81,7 +83,7 @@ class RealCam:
         scene = Scene(blocks)
         scene.lookat_vec = self._getLookAt()
 
-        scene.samples = self.samples 
+        scene.samples = self.samples
         scene.camera = self.camera
         scene.phenomenons = self.phenomenons
         scene.method = (self.method, "")

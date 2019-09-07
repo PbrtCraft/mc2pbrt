@@ -2,6 +2,7 @@ from util import tqdmpos
 
 from tuple_calculation import plus
 
+
 class WaterSolver:
     """Write the water in then scene."""
 
@@ -10,7 +11,8 @@ class WaterSolver:
         self.Y = len(self.block)
         self.Z = len(self.block[0])
         self.X = len(self.block[0][0])
-        self.level = [[[None]*self.X for i in range(self.Z)] for j in range(self.Y)]
+        self.level = [
+            [[None]*self.X for i in range(self.Z)] for j in range(self.Y)]
 
         self._build()
 
@@ -29,22 +31,27 @@ class WaterSolver:
             elif b._is("seagrass") or b.name == "kelp_plant":
                 self.level[y][z][x] = 0
 
-
     def _level2height(self, l):
-        if l >= 8: return 1.
-        if l == 0: return 1. - self.eps
+        if l >= 8:
+            return 1.
+        if l == 0:
+            return 1. - self.eps
         return (1-self.eps)*(8-l)/7.
 
     def getLevel(self, pt):
         x, y, z = pt
-        if x < 0 or x >= self.X: return None
-        if y < 0 or y >= self.Y: return None
-        if z < 0 or z >= self.Z: return None
+        if x < 0 or x >= self.X:
+            return None
+        if y < 0 or y >= self.Y:
+            return None
+        if z < 0 or z >= self.Z:
+            return None
         return self.level[y][z][x]
 
     def getHeight(self, pt):
         l = self.getLevel(pt)
-        if l == None: return None
+        if l == None:
+            return None
         return self._level2height(l)
 
     def calAvg(self, xs):
@@ -57,11 +64,13 @@ class WaterSolver:
 
     def write(self, fout):
         print("Writing water blocks...")
-        fout.write('Material "glass" "float eta" [1.33] "rgb Kt" [.28 .72 1]\n')
+        fout.write(
+            'Material "glass" "float eta" [1.33] "rgb Kt" [.28 .72 1]\n')
         for x, y, z in tqdmpos(range(self.X), range(self.Y), range(self.Z)):
-            if self.level[y][z][x] == None: continue
+            if self.level[y][z][x] == None:
+                continue
             pt = (x, y, z)
-            h = self._level2height(self.level[y][z][x])
+            # h = self._level2height(self.level[y][z][x])
             fout.write('AttributeBegin\n')
             fout.write('Translate %f %f %f\n' % plus(pt, (.5, 0, .5)))
 
@@ -69,7 +78,8 @@ class WaterSolver:
                 # When a water block is on current block, the water should be full.
                 ps = [1]*9
             else:
-                dt = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 0), (0, 1), (1, -1), (1, 0), (1, 1)]
+                dt = [(-1, -1), (-1, 0), (-1, 1), (0, -1),
+                      (0, 0), (0, 1), (1, -1), (1, 0), (1, 1)]
                 hs = [None]*9
                 for i in range(9):
                     hs[i] = self.getHeight((x+dt[i][1], y, z+dt[i][0]))

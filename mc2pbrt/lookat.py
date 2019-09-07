@@ -4,6 +4,7 @@ def laglongToCoord(theta, phi):
     theta, phi = theta/180*pi, phi/180*pi
     return sin(theta)*cos(phi), sin(phi), cos(theta)*cos(phi)
 
+
 def firstPerson(player):
     """First person perspective"""
     theta, phi = map(lambda x: -x, player.rot)

@@ -155,7 +155,7 @@ class ModelLoader:
         self._resolveElements(data)
 
         if "parent" in data and data["parent"] not in ["block/block", "block/thin_block"]:
-            par_data, unused = self._getModel(data["parent"])
+            par_data, dummy_1 = self._getModel(data["parent"])
             if "textures" in data:
                 if "textures" not in par_data:
                     par_data["textures"] = {}
