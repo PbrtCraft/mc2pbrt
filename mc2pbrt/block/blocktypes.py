@@ -114,10 +114,15 @@ class BlockGlassPane(BlockBase):
     def build(self):
         self.addModel(self.name + "_post")
         side = self.name + "_side"
+        noside = self.name + "_noside"
         mp = {"north": 0, "east": 3, "south": 2, "west": 1}
         for k in mp:
             if self.state[k] == "true":
                 self.addModel(side, [
+                    {"type": "rotate", "axis": "y", "angle": 90*mp[k]}
+                ])
+            else:
+                self.addModel(noside, [
                     {"type": "rotate", "axis": "y", "angle": 90*mp[k]}
                 ])
 
