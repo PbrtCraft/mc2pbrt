@@ -64,6 +64,9 @@ class BlockCreator:
         elif name == "iron_bars":
             return BlockIronBars(name, state, biome_id)
 
+        elif name == "chorus_plant":
+            return BlockChorusPlant(name, state, biome_id)
+
         elif check("glass_pane"):
             return BlockGlassPane(name, state, biome_id)
 
@@ -73,7 +76,7 @@ class BlockCreator:
         elif check("sign"):
             return BlockNotImplement(name, state, biome_id)
 
-        elif name in ["wheat", "beetroots", "melon_stem", "pumpkin_stem"]:
+        elif name in ["wheat", "beetroots", "melon_stem", "pumpkin_stem", "sweet_berry_bush"]:
             return BlockStages(name, state, biome_id)
 
         elif name in ["potatoes", "carrots"]:
@@ -113,20 +116,13 @@ class BlockCreator:
             return BlockNotImplement(name, state, biome_id)
 
         elif name == "scaffolding":
-            # TODO
-            return BlockNotImplement(name, state, biome_id)
+            return BlockNormal(name + "_stable", state, biome_id)
 
         elif name == "bamboo":
-            # TODO
-            return BlockNotImplement(name, state, biome_id)
-
-        elif name == "sweet_berry_bush":
-            # TODO
-            return BlockNotImplement(name, state, biome_id)
+            return BlockBamboo(name, state, biome_id)
 
         elif name == "cocoa":
-            # TODO
-            return BlockNotImplement(name, state, biome_id)
+            return BlockCocoa(name, state, biome_id)
 
         elif name == "fire":
             return BlockFire(name, state, biome_id)

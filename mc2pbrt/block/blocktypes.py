@@ -8,6 +8,26 @@ class BlockAir(BlockBase):
         return
 
 
+class BlockBamboo(BlockBase):
+    def build(self):
+        age = self.state["age"]
+        leaves = self.state["leaves"]
+        self.addModel("bamboo1_age%s" % age)
+        if leaves != "none":
+            self.addModel("bamboo_%s_leaves" % leaves)
+
+
+class BlockCocoa(BlockBase):
+    def build(self):
+        age = self.state["age"]
+        facing = self.state["facing"]
+        mdl = "cocoa_stage%s" % age
+        mp = {"north": 0, "east": 3, "south": 2, "west": 1}
+        self.addModel(mdl, [
+            {"type": "rotate", "axis": "y", "angle": 90*mp[facing]}
+        ])
+
+
 class BlockNormal(BlockBase):
     def build(self):
         if self.getLight():
@@ -112,6 +132,7 @@ class BlockIronBars(BlockBase):
 
 class BlockGlassPane(BlockBase):
     def build(self):
+        self.material = Glass(self)
         self.addModel(self.name + "_post")
         side = self.name + "_side"
         noside = self.name + "_noside"
@@ -149,6 +170,24 @@ class BlockCake(BlockBase):
             self.addModel(self.name + ("_slice%d" % bit))
         else:
             self.addModel(self.name)
+
+
+class BlockChorusPlant(BlockBase):
+    def build(self):
+        side = self.name + "_side"
+        noside = self.name + "_noside"
+        smap = {"true": side, "false": noside}
+        self.addModel(smap[self.state["up"]], [
+            {"type": "rotate", "axis": "x", "angle": 90}
+        ])
+        self.addModel(smap[self.state["down"]], [
+            {"type": "rotate", "axis": "x", "angle": -90}
+        ])
+        mp = {"north": 0, "east": 3, "south": 2, "west": 1}
+        for k in mp:
+            self.addModel(smap[self.state[k]], [
+                {"type": "rotate", "axis": "x", "angle": 90*mp[k]}
+            ])
 
 
 class BlockHopper(BlockBase):
@@ -229,6 +268,15 @@ class BlockGlass(BlockBase):
     def build(self):
         self.material = Glass(self)
         self.addModel(self.name)
+
+
+class BlockLantern(BlockBase):
+    def build(self):
+        self.material = Light(self)
+        if self.state["hanging"] == "true":
+            self.addModel("hanging_lantern")
+        else:
+            self.addModel("lantern")
 
 
 class BlockFire(BlockBase):
