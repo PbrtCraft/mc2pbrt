@@ -94,8 +94,12 @@ class BlockBase:
     def empty(self):
         return not self.models
 
-    def _getModel(self, name):
-        model, par = ResourceManager().model_loader.getModel("block/" + name)
+    def _getModel(self, orgname):
+        if not orgname.count("/"):
+            name = "block/" + orgname
+        else:
+            name = orgname
+        model, par = ResourceManager().model_loader.getModel(name)
         if "elements" not in model:
             return None, None
         return model, par
@@ -144,6 +148,8 @@ class BlockBase:
             delta = delta_f(cube)
             l1, l2 = l_f(cube)
             fout.write('AttributeBegin\n')
+            if "name" in ele:
+                print(ele["name"], facename, uv)
 
             if "rotation" in face:
                 rxyz = {"x": (1, 0, 0), "y": (0, 1, 0), "z": (0, 0, 1)}

@@ -36,12 +36,16 @@ class ResourceManager:
         self.local_texture_folder = (
             os.path.join(work_dir,
                          get("SceneTextureFolder", os.path.join(".", "scenes", "block"))))
+        self.local_entity_folder = (
+            os.path.join(work_dir,
+                         get("SceneEntityFolder", os.path.join(".", "scenes", "entity"))))
         self.scene_folder = (
             os.path.join(work_dir,
                          get("SceneFolder", os.path.join(".", "scenes"))))
 
         os.makedirs(self.local_model_folder, exist_ok=True)
         os.makedirs(self.local_texture_folder, exist_ok=True)
+        #os.makedirs(self.local_entity_folder, exist_ok=True)
 
         self.version_jar = os.path.join(work_dir, get("VersionJar", ""))
         self.setup()
@@ -97,8 +101,9 @@ class ResourceManager:
 
         has_model = self.checkModelFolder()
         has_texture = self.checkTextureFolder()
+        has_entity = self.checkEntityFolder()
 
-        if has_model and has_texture:
+        if has_model and has_texture and has_entity:
             return
 
         self.setupVersionJar()
@@ -106,10 +111,11 @@ class ResourceManager:
             with zipfile.ZipFile(self.version_jar, 'r') as vzip:
                 vzip.extractall(temp_dir)
 
+            asset_path = os.path.join(temp_dir, "assets", "minecraft")
+
             if not has_model:
                 print("Copy model json files...", )
-                block_model_dir = os.path.join(
-                    temp_dir, "assets", "minecraft", "models", "block")
+                block_model_dir = os.path.join(asset_path, "models", "block")
                 for filename in tqdm(os.listdir(block_model_dir), ascii=True):
                     if filename.endswith(".json"):
                         full_filename = os.path.join(block_model_dir, filename)
@@ -117,11 +123,15 @@ class ResourceManager:
 
             if not has_texture:
                 print("Copy texture files...")
-                texture_dir = os.path.join(
-                    temp_dir, "assets", "minecraft", "textures", "block")
+                texture_dir = os.path.join(asset_path, "textures", "block")
                 for filename in tqdm(os.listdir(texture_dir), ascii=True):
                     full_filename = os.path.join(texture_dir, filename)
                     shutil.copy(full_filename, self.local_texture_folder)
+
+            if not has_entity:
+                print("Copy entity files...")
+                entity_dir = os.path.join(asset_path, "textures", "entity")
+                shutil.copytree(entity_dir, self.local_entity_folder)
 
     def setupFire(self):
         """Setup cropped fire texture"""
@@ -140,10 +150,7 @@ class ResourceManager:
         Returns:
             Model json file is ready or not
         """
-        json_list = [fn for fn in os.listdir(
-            self.local_model_folder) if fn.endswith(".json")]
-        # Check with hash function ?
-        return len(json_list) > 0
+        return self._checkFolder(self.local_model_folder, ".json")
 
     def checkTextureFolder(self):
         """Check if the folder has texture pngs
@@ -151,17 +158,28 @@ class ResourceManager:
         Returns:
             Texture image file is ready or not
         """
+        return self._checkFolder(self.local_texture_folder, ".png")
 
-        png_list = [fn for fn in os.listdir(
-            self.local_texture_folder) if fn.endswith(".png")]
-        # Check with hash function ?
-        return len(png_list) > 0
+    def checkEntityFolder(self):
+        """Check if the folder has texture pngs
+
+        Returns:
+            Texture image file is ready or not
+        """
+        return self._checkFolder(self.local_entity_folder, ".png")
+
+    def _checkFolder(self, path, postfix):
+        if not os.path.exists(path):
+            return False
+        file_list = [fn for fn in os.listdir(path) if fn.endswith(postfix)]
+        return len(file_list) > 0
 
 
 class ModelLoader:
     def __init__(self, path="."):
         self.path = path
         self.db = {}
+        self.builtin_list = set(["entity/chest"])
 
     def _resolveTexture(self, data, texname):
         if texname[0] != '#':
@@ -189,8 +207,11 @@ class ModelLoader:
         return False
 
     def _getModel(self, name):
-        with open(self.path + "/" + name + ".json", "r") as f:
-            data = json.load(f)
+        if name in self.builtin_list:
+            data = self._builtin(name)
+        else:
+            with open(self.path + "/" + name + ".json", "r") as f:
+                data = json.load(f)
 
         self._resolveElements(data)
 
@@ -207,6 +228,56 @@ class ModelLoader:
             if flag_eles or flag_texs:
                 return par_data, data["parent"]
         return data, ""
+
+    def _builtin(self, name):
+        if name == "entity/chest":
+            # Source: https://gist.github.com/Choonster/e8668c195eecf800cb5dc53538a9c848
+            return {
+                "textures": {
+                    "0": "entity/chest/normal"
+                },
+                "elements": [
+                    {
+                        "name": "Base",
+                        "from": [1.0, 0.0, 1.0],
+                        "to": [15.0, 10.0, 15.0],
+                        "faces": {
+                            "north": {"texture": "#0", "uv": [3.5, 8.25, 7.0, 10.75]},
+                            "east": {"texture": "#0", "uv": [0.0, 8.25, 3.5, 10.75]},
+                            "south": {"texture": "#0", "uv": [10.5, 8.25, 14.0, 10.75]},
+                            "west": {"texture": "#0", "uv": [7.0, 8.25, 10.5, 10.75]},
+                            "up": {"texture": "#0", "uv": [3.5, 4.75, 7.0, 8.25]},
+                            "down": {"texture": "#0", "uv": [10.5, 4.75, 7.0, 8.25]}
+                        }
+                    },
+                    {
+                        "name": "Knob",
+                        "from": [7.0, 8.0, 0.0],
+                        "to": [9.0, 12.0, 1.0],
+                        "faces": {
+                            "north": {"texture": "#0", "uv": [0.25, 0.25, 0.75, 1.25]},
+                            "east": {"texture": "#0", "uv": [0.0, 0.25, 0.25, 1.25]},
+                            "south": {"texture": "#0", "uv": [1.0, 0.25, 1.5, 1.25]},
+                            "west": {"texture": "#0", "uv": [0.75, 0.25, 1.0, 1.25]},
+                            "up": {"texture": "#0", "uv": [0.75, 0.0, 0.25, 0.25]},
+                            "down": {"texture": "#0", "uv": [1.25, 0.0, 0.75, 0.25]}
+                        }
+                    },
+                    {
+                        "name": "Lid",
+                        "from": [1.0, 9.0, 1.0],
+                        "to": [15.0, 14.0, 15.0],
+                        "faces": {
+                            "north": {"texture": "#0", "uv": [3.5, 3.5, 7.0, 4.75]},
+                            "east": {"texture": "#0", "uv": [0.0, 3.5, 3.5, 4.75]},
+                            "south": {"texture": "#0", "uv": [10.5, 3.5, 14.0, 4.75]},
+                            "west": {"texture": "#0", "uv": [7.0, 3.5, 10.5, 4.75]},
+                            "up": {"texture": "#0", "uv": [3.5, 0.0, 7.0, 3.5]},
+                            "down": {"texture": "#0", "uv": [10.5, 0.0, 7.0, 3.5]}
+                        }
+                    }
+                ]
+            }
 
     def getModel(self, name):
         if name not in self.db:
@@ -225,5 +296,9 @@ class ModelLoader:
                                 uv[i] /= 16.
                         # swap UV
                         uv = [uv[1], uv[0], uv[3], uv[2]]
+                        if name == "entity/chest":
+                            # Don't know why
+                            uv[0] = 1 - uv[0]
+                            uv[2] = 1 - uv[2]
                         face["uv"] = tuple(uv)
         return self.db[name]

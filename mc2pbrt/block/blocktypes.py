@@ -28,6 +28,11 @@ class BlockCocoa(BlockBase):
         ])
 
 
+class BlockChest(BlockBase):
+    def build(self):
+        self.addModel("entity/chest")
+
+
 class BlockNormal(BlockBase):
     def build(self):
         if self.getLight():

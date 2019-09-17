@@ -71,7 +71,7 @@ class BlockCreator:
             return BlockGlassPane(name, state, biome_id)
 
         elif check("chest"):
-            return BlockNotImplement(name, state, biome_id)
+            return BlockChest(name, state, biome_id)
 
         elif check("sign"):
             return BlockNotImplement(name, state, biome_id)
