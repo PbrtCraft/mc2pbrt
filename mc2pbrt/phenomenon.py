@@ -6,7 +6,7 @@ from resource import ResourceManager
 class EnvirnmentMap:
     def __init__(self, filename):
         self.filename = filename
-        if not os.path.isfile(os.path.join(ResourceManager().scene_folder, filename)):
+        if not ResourceManager().isFile(filename):
             print("[Warning] EnvirnmentMap: %s file does not exist" % filename)
 
     def write(self, fout):

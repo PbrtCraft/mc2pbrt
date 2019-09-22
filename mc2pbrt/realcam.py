@@ -88,5 +88,5 @@ class RealCam:
         scene.phenomenons = self.phenomenons
         scene.method = (self.method, "")
 
-        scene_path = os.path.join(ResourceManager().scene_folder, target)
+        scene_path = os.path.join(ResourceManager().scenes_path, target)
         scene.write(scene_path)

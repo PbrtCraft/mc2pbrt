@@ -13,44 +13,41 @@ from util import singleton
 
 @singleton
 class ResourceManager:
+    '''
+    ResourceManager try to build the folder structure:
+        * workdir/
+            * scenes/
+                * block/
+                * env/
+                * (folders under textures)
+                * target.pbrt
+            * assets/
+                * (folders under assets/minecraft except textures)
+            * config.json
+    '''
+
     def __init__(self):
         work_dir = os.getcwd()
+        self.work_dir = work_dir
         if os.path.exists(os.path.join(work_dir, "resource.json")):
             with open("resource.json") as f:
                 config = json.load(f)
         else:
             config = {}
 
-        def get(key, default_value):
-            if key in config:
-                return config[key]
-            else:
-                return default_value
+        self.version_jar = os.path.join(work_dir, config.get("VersionJar", ""))
+        self.scenes_path = os.path.join(work_dir, "scenes")
+        self.assets_path = os.path.join(work_dir, "assets")
+        if not os.path.isdir(self.scenes_path):
+            self.setup()
 
-        self.local_model_folder = (
-            os.path.join(work_dir,
-                         get("LocalModelFolder", os.path.join(".", "models", "block"))))
         self.model_loader = ModelLoader(
-            os.path.join(work_dir,
-                         get("ModelLoaderPath", os.path.join(".", "models"))))
-        self.local_texture_folder = (
-            os.path.join(work_dir,
-                         get("SceneTextureFolder", os.path.join(".", "scenes", "block"))))
-        self.local_entity_folder = (
-            os.path.join(work_dir,
-                         get("SceneEntityFolder", os.path.join(".", "scenes", "entity"))))
-        self.scene_folder = (
-            os.path.join(work_dir,
-                         get("SceneFolder", os.path.join(".", "scenes"))))
-
-        os.makedirs(self.local_model_folder, exist_ok=True)
-        os.makedirs(self.local_texture_folder, exist_ok=True)
-        #os.makedirs(self.local_entity_folder, exist_ok=True)
-
-        self.version_jar = os.path.join(work_dir, get("VersionJar", ""))
-        self.setup()
-
+            os.path.join(self.assets_path, "models"))
         self.table_alpha = {}
+
+    def isFile(self, fn):
+        full_filename = os.path.join(self.scenes_path, fn)
+        return os.path.isfile(full_filename)
 
     def hasAlpha(self, texture_fn):
         """Check if texture file has alpha channel
@@ -61,8 +58,7 @@ class ResourceManager:
             Texture has alpha channel or not.
         """
         if texture_fn not in self.table_alpha:
-            full_filename = os.path.join(
-                self.local_texture_folder, "..", texture_fn)
+            full_filename = os.path.join(self.scenes_path, texture_fn)
             image = Image.open(full_filename)
             self.table_alpha[texture_fn] = len(image.mode) == 4
 
@@ -98,81 +94,25 @@ class ResourceManager:
            1. Copy Model.json into folder
            2. Copy Texture into folder
         """
-
-        has_model = self.checkModelFolder()
-        has_texture = self.checkTextureFolder()
-        has_entity = self.checkEntityFolder()
-
-        if has_model and has_texture and has_entity:
-            return
-
         self.setupVersionJar()
         with tempfile.TemporaryDirectory() as temp_dir:
             with zipfile.ZipFile(self.version_jar, 'r') as vzip:
                 vzip.extractall(temp_dir)
 
-            asset_path = os.path.join(temp_dir, "assets", "minecraft")
-
-            if not has_model:
-                print("Copy model json files...", )
-                block_model_dir = os.path.join(asset_path, "models", "block")
-                for filename in tqdm(os.listdir(block_model_dir), ascii=True):
-                    if filename.endswith(".json"):
-                        full_filename = os.path.join(block_model_dir, filename)
-                        shutil.copy(full_filename, self.local_model_folder)
-
-            if not has_texture:
-                print("Copy texture files...")
-                texture_dir = os.path.join(asset_path, "textures", "block")
-                for filename in tqdm(os.listdir(texture_dir), ascii=True):
-                    full_filename = os.path.join(texture_dir, filename)
-                    shutil.copy(full_filename, self.local_texture_folder)
-
-            if not has_entity:
-                print("Copy entity files...")
-                entity_dir = os.path.join(asset_path, "textures", "entity")
-                shutil.copytree(entity_dir, self.local_entity_folder)
+            assets_path = os.path.join(temp_dir, "assets", "minecraft")
+            os.rename(os.path.join(assets_path, "textures"), self.scenes_path)
+            os.rename(assets_path, self.assets_path)
 
     def setupFire(self):
         """Setup cropped fire texture"""
-        fire = os.path.join(self.local_texture_folder, "fire.png")
+        fire = os.path.join(self.scenes_path, "block", "fire.png")
         if os.path.isfile(fire):
             return
-        fire_source = os.path.join(self.local_texture_folder, "fire_0.png")
+        fire_source = os.path.join(self.scenes_path, "block", "fire_0.png")
         img = Image.open(fire_source)
         area = (0, 0, 16, 16)
         cropped_img = img.crop(area)
         cropped_img.save(fire)
-
-    def checkModelFolder(self):
-        """Check if the folder has model json file
-
-        Returns:
-            Model json file is ready or not
-        """
-        return self._checkFolder(self.local_model_folder, ".json")
-
-    def checkTextureFolder(self):
-        """Check if the folder has texture pngs
-
-        Returns:
-            Texture image file is ready or not
-        """
-        return self._checkFolder(self.local_texture_folder, ".png")
-
-    def checkEntityFolder(self):
-        """Check if the folder has texture pngs
-
-        Returns:
-            Texture image file is ready or not
-        """
-        return self._checkFolder(self.local_entity_folder, ".png")
-
-    def _checkFolder(self, path, postfix):
-        if not os.path.exists(path):
-            return False
-        file_list = [fn for fn in os.listdir(path) if fn.endswith(postfix)]
-        return len(file_list) > 0
 
 
 class ModelLoader:

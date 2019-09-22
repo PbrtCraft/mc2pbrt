@@ -148,9 +148,6 @@ class BlockBase:
             delta = delta_f(cube)
             l1, l2 = l_f(cube)
             fout.write('AttributeBegin\n')
-            if "name" in ele:
-                print(ele["name"], facename, uv)
-
             if "rotation" in face:
                 rxyz = {"x": (1, 0, 0), "y": (0, 1, 0), "z": (0, 0, 1)}
                 # shape[-1] should be "x", "y" or "z"
