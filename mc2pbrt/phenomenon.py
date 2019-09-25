@@ -3,6 +3,20 @@ import os
 from resource import ResourceManager
 
 
+def create(name, params):
+    type_map = {
+        "Fog": Fog,
+        "EnvLight": EnvirnmentMap,
+        "Rayleigh": Rayleigh,
+        "Sun": Sun,
+        "Rain": Rain,
+    }
+    if name in type_map:
+        return type_map[name](**params)
+    else:
+        raise KeyError("Phenonmenon name not found")
+
+
 class EnvirnmentMap:
     def __init__(self, filename):
         self.filename = filename
