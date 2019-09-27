@@ -1,7 +1,7 @@
 def create(name, params):
     type_map = {
         "Perspective": CameraPerspective,
-        "Envirnment": CameraEnvirnment,
+        "Environment": CameraEnvironment,
         "Realistic": CameraRealistic,
     }
     if name in type_map:
@@ -11,14 +11,14 @@ def create(name, params):
 
 
 class CameraPerspective:
-    def __init__(self, fov=70):
+    def __init__(self, fov: int = 70):
         self.fov = fov
 
     def write(self, fout):
         fout.write('Camera "perspective" "float fov" [%f]\n' % self.fov)
 
 
-class CameraEnvirnment:
+class CameraEnvironment:
     def __init__(self):
         pass
 

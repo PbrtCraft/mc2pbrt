@@ -6,7 +6,7 @@ from resource import ResourceManager
 def create(name, params):
     type_map = {
         "Fog": Fog,
-        "EnvLight": EnvirnmentMap,
+        "EnvironmentMap": EnvironmentMap,
         "Rayleigh": Rayleigh,
         "Sun": Sun,
         "Rain": Rain,
@@ -14,11 +14,11 @@ def create(name, params):
     if name in type_map:
         return type_map[name](**params)
     else:
-        raise KeyError("Phenonmenon name not found")
+        raise KeyError("Phenomenon name not found")
 
 
-class EnvirnmentMap:
-    def __init__(self, filename):
+class EnvironmentMap:
+    def __init__(self, filename: str):
         self.filename = filename
         if not ResourceManager().isFile(filename):
             print("[Warning] EnvirnmentMap: %s file does not exist" % filename)
@@ -32,7 +32,7 @@ class EnvirnmentMap:
 
 
 class Fog:
-    def __init__(self, I_s, I_a):
+    def __init__(self, I_s: float, I_a: float):
         self.I_s = I_s
         self.I_a = I_a
 
@@ -64,7 +64,7 @@ class Rayleigh:
 
 
 class Sun:
-    def __init__(self, hour, scene_radius):
+    def __init__(self, hour: int, scene_radius: int):
         if hour < 6 or hour > 18:
             raise ValueError("Hour should be in the range of [6, 18]")
 
@@ -83,7 +83,7 @@ class Sun:
 
 
 class Rain:
-    def __init__(self, rainfall, scene_radius):
+    def __init__(self, rainfall: int, scene_radius: int):
         self.size = scene_radius*2 + 1
         self.rainfall = rainfall
 
