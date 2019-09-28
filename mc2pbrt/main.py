@@ -4,11 +4,20 @@ import phenomenon
 import camera
 import method
 
+from argparse import ArgumentParser
+
 from realcam import RealCam
 
 
 if __name__ == "__main__":
-    with open(sys.argv[1], "r") as f:
+
+    parser = ArgumentParser()
+    parser.add_argument("--filename", type=str, help="Filename")
+    parser.add_argument("--no-update-scene",
+                        action='store_true', help="Use old scene file")
+    args = parser.parse_args()
+
+    with open(args.filename, "r") as f:
         settings = json.load(f)
 
     phs = []
@@ -37,4 +46,7 @@ if __name__ == "__main__":
         phenomenons=phs,
     )
 
-    rc.run(settings.get("Target", "target.pbrt"))
+    rc.run(
+        target=settings.get("Target", "target.pbrt"),
+        update_scene=not args.no_update_scene,
+    )

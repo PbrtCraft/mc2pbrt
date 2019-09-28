@@ -7,8 +7,9 @@ import lookat
 from resource import ResourceManager
 from pyanvil.world import World
 from pyanvil.player import Player
-from scene import Scene
-from block import BlockCreator
+from block import BlockCreator, BlockSolver
+from water import WaterSolver
+from lava import LavaSolver
 
 from util import tqdmpos
 
@@ -78,15 +79,60 @@ class RealCam:
                 vec[3] - dx, vec[4], vec[5] - dz,
                 vec[6], vec[7], vec[8])
 
-    def run(self, target):
+    def run(self, target, update_scene):
+        self.lookat_vec = self._getLookAt()
+        self.stand_pt = tuple(map(int, self.lookat_vec[:3]))
+
+        target_name, target_ext = os.path.splitext(target)
+
+        main_path = os.path.join(
+            ResourceManager().scenes_path, target)
+
+        scene_filename = target_name + "_scene" + target_ext
+        scene_path = os.path.join(
+            ResourceManager().scenes_path, scene_filename)
+
+        print("Start writing main file ...")
+        self._writeMain(main_path, scene_filename)
+
+        if update_scene:
+            print("Start writing scene file ...")
+            self._writeScene(scene_path)
+
+    def _writeMain(self, filename, scene_filename):
+        fout = open(filename, "w")
+
+        # The coordinate system of minecraft and pbrt is different.
+        # Pbrt is lefthand base, while minecraft is righthand base.
+        fout.write("Scale -1 1 1\n")
+
+        fout.write(
+            'Film "image" "integer xresolution" [960] "integer yresolution" [480]\n')
+
+        fout.write('LookAt %f %f %f  %f %f %f %f %f %f\n' % self.lookat_vec)
+
+        self.camera.write(fout)
+        self.method.write(fout)
+
+        fout.write(
+            'Sampler "lowdiscrepancy" "integer pixelsamples" [%d]\n' % self.samples)
+
+        fout.write('WorldBegin\n')
+        fout.write('Include "%s"\n' % scene_filename)
+        fout.write('WorldEnd\n')
+
+    def _writeScene(self, filename):
+        fout = open(filename, "w")
+
+        for phenomenon in self.phenomenons:
+            phenomenon.write(fout)
+
         blocks = self._getBlocks()
-        scene = Scene(blocks)
-        scene.lookat_vec = self._getLookAt()
+        block_solver = BlockSolver(blocks)
+        block_solver.write(fout, self.stand_pt)
 
-        scene.samples = self.samples
-        scene.camera = self.camera
-        scene.phenomenons = self.phenomenons
-        scene.method = self.method
+        water_solver = WaterSolver(blocks)
+        water_solver.write(fout)
 
-        scene_path = os.path.join(ResourceManager().scenes_path, target)
-        scene.write(scene_path)
+        lava_solver = LavaSolver(blocks)
+        lava_solver.write(fout)
