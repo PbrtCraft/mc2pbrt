@@ -2,6 +2,7 @@ import sys
 import json
 import phenomenon
 import camera
+import method
 
 from realcam import RealCam
 
@@ -20,13 +21,19 @@ if __name__ == "__main__":
     else:
         cam = camera.create(json_camera["name"], json_camera["params"])
 
+    json_method = settings.get("Method", None)
+    if json_method is None:
+        use_method = method.PathTracing()
+    else:
+        use_method = method.create(json_method["name"], json_method["params"])
+
     rc = RealCam(
         world_name=settings["World"],
         player_name=settings["Player"],
         radius=settings["Radius"],
         samples=settings.get("Samples", 16),
         camera=cam,
-        method=settings.get("Method", "path"),
+        method=use_method,
         phenomenons=phs,
     )
 

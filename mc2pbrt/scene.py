@@ -2,14 +2,16 @@ from block import BlockSolver
 from water import WaterSolver
 from lava import LavaSolver
 
+
 class Scene:
     def __init__(self, block):
         self.block = block
 
-        self.camera = None
         self.lookat_vec = None
+
+        self.camera = None
+        self.method = None
         self.samples = 16
-        self.method = ("sppm", "")
 
         self.phenomenons = []
 
@@ -21,15 +23,17 @@ class Scene:
         # Pbrt is lefthand base, while minecraft is righthand base.
         fout.write("Scale -1 1 1\n")
 
-        fout.write('Film "image" "integer xresolution" [960] "integer yresolution" [480]\n')
+        fout.write(
+            'Film "image" "integer xresolution" [960] "integer yresolution" [480]\n')
 
         fout.write('LookAt %f %f %f  %f %f %f %f %f %f\n' % self.lookat_vec)
         stand_pt = tuple(map(int, self.lookat_vec[:3]))
 
         self.camera.write(fout)
+        self.method.write(fout)
 
-        fout.write('Integrator "%s" %s\n' % self.method)
-        fout.write('Sampler "lowdiscrepancy" "integer pixelsamples" [%d]\n' % self.samples)
+        fout.write(
+            'Sampler "lowdiscrepancy" "integer pixelsamples" [%d]\n' % self.samples)
 
         fout.write('WorldBegin\n')
 
