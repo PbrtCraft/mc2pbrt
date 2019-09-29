@@ -1,8 +1,9 @@
 def create(name, params):
     type_map = {
-        "Perspective": CameraPerspective,
-        "Environment": CameraEnvironment,
-        "Realistic": CameraRealistic,
+        "Perspective": Perspective,
+        "Environment": Environment,
+        "Realistic": Realistic,
+        "Orthographic": Orthographic,
     }
     if name in type_map:
         return type_map[name](**params)
@@ -10,7 +11,7 @@ def create(name, params):
         raise KeyError("Camera name not found")
 
 
-class CameraPerspective:
+class Perspective:
     def __init__(self, fov: int = 70):
         self.fov = fov
 
@@ -18,7 +19,7 @@ class CameraPerspective:
         fout.write('Camera "perspective" "float fov" [%f]\n' % self.fov)
 
 
-class CameraEnvironment:
+class Environment:
     def __init__(self):
         pass
 
@@ -26,6 +27,17 @@ class CameraEnvironment:
         fout.write('Camera "environment"\n')
 
 
-class CameraRealistic:
+class Orthographic:
     def __init__(self):
-        raise NotImplementedError("Realistic Camera")
+        pass
+
+    def write(self, fout):
+        fout.write('Camera "orthographic"\n')
+
+
+class Realistic:
+    def __init__(self):
+        pass
+
+    def write(self, fout):
+        fout.write('Camera "realistic"\n')
