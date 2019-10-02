@@ -21,16 +21,23 @@ Example:
 {
   "Samples" : 256,
   "Camera" : {
-    "name" : "perspective",
+    "name" : "Perspective",
     "fov" : 75
   },
   "World" : "Idea",
   "Player" : "Mudream",
   "Phenomenons" : [
-    ["Rain", 1, 48],
-    ["EnvLight", "env/aristea_wreck_4k.exr"]
+    {
+      "name": "EnvironmentMap",
+      "params": {
+        "filename": "env/aristea_wreck_4k.exr"
+      }
+    }
   ],
-  "Method" : "path",
+  "Method" : {
+    "name": "path",
+    "params": {},
+  },
   "Radius" : 16,
   "Target" : "example.pbrt"
 }
@@ -78,11 +85,3 @@ Parameters:
 
 * `I_s`: Scatter scalar
 * `I_a`: Absorb scalar 
-
-#### Rain
-
-## Folder
-
-* block : The model json files should be here.
-* scenes/block : Texture files should be here.
-* scenes/env   : Current include 2 envirnment maps from [HavenHDRI](https://hdrihaven.com/hdris/)
