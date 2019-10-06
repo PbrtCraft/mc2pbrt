@@ -79,7 +79,7 @@ class Sun:
 
     def write(self, fout):
         fout.write('LightSource "distant" "point from" [%f %f %f]' % self.position +
-                   '"blackbody L" [6500 %f]' % self.scale)
+                   '"blackbody L" [6500 %f]\n' % self.scale)
 
 
 class Rain:

@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
     json_camera = settings.get("Camera", None)
     if json_camera is None:
-        cam = camera.CameraPerspective()
+        cam = camera.Perspective()
     else:
         cam = camera.create(json_camera["name"], json_camera["params"])
 
