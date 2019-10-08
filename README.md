@@ -1,5 +1,7 @@
 # mc2pbrt
 
+![](https://travis-ci.com/PbrtCraft/mc2pbrt.svg?branch=master)
+
 ![](pbrt.png)
 
 This repo is a program that can output a pbrt file by current player pose.
