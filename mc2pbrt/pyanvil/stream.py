@@ -11,6 +11,7 @@ class InputStream:
     def peek(self):
         return self.buffer[self.pos]
 
+
 class OutputStream:
     def __init__(self):
         self.buffer = bytes([])

@@ -10,7 +10,7 @@ class Foliage:
         tint_color = biome.getFoliageColor(self.block.biome_id, 0)
         fout.write(('Material "translucent" "texture Kd" "%s-color" ' % tex) +
                    ('"rgb reflect" [%f %f %f] ' % tint_color) +
-                   ('"rgb transmit" [%f %f %f] ' % tint_color))
+                   ('"rgb transmit" [%f %f %f] \n' % tint_color))
 
 
 class Grass:
@@ -22,7 +22,7 @@ class Grass:
         tint_color = biome.getGrassColor(self.block.biome_id, 0)
         fout.write(('Material "translucent" "texture Kd" "%s-color" ' % tex) +
                    ('"rgb reflect" [%f %f %f] ' % tint_color) +
-                   ('"rgb transmit" [%f %f %f] ' % tint_color))
+                   ('"rgb transmit" [%f %f %f]\n' % tint_color))
 
 
 class Matte:

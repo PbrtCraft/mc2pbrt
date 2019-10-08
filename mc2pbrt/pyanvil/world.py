@@ -1,7 +1,13 @@
-import os, sys, math, gzip, zlib, time
+import os
+import sys
+import math
+import gzip
+import zlib
+import time
 
 import pyanvil.nbt as nbt
 import pyanvil.stream as stream
+
 
 class BlockState:
     def __init__(self, name, props):
@@ -14,6 +20,7 @@ class BlockState:
 
 class Block:
     AIR = None
+
     def __init__(self, state):
         self.state = state
 
@@ -22,6 +29,7 @@ class Block:
 
     def get_state(self):
         return self.state
+
 
 Block.AIR = Block(BlockState('minecraft:air', {}))
 
@@ -45,21 +53,23 @@ class Chunk:
         self.xpos = xpos
         self.zpos = zpos
         self._build(raw_nbt)
-        
+
     def _build(self, raw_nbt):
         sections = {}
         level_node = raw_nbt.get('Level')
         for section in level_node.get('Sections').children:
             if section.has('BlockStates'):
-                flatstates = [c.get() for c in section.get('BlockStates').children]
+                flatstates = [c.get()
+                              for c in section.get('BlockStates').children]
                 pack_size = int((len(flatstates) * 64) / (16**3))
                 states = [
-                    Chunk._read_width_from_loc(flatstates, pack_size, i) for i in range(16**3)
+                    self._read_width_from_loc(flatstates, pack_size, i) for i in range(16**3)
                 ]
                 palette = [
                     BlockState(
                         state.get('Name').get(),
-                        state.get('Properties').to_dict() if state.has('Properties') else {}
+                        state.get('Properties').to_dict() if state.has(
+                            'Properties') else {}
                     ) for state in section.get('Palette').children
                 ]
                 blocks = [
@@ -67,12 +77,13 @@ class Chunk:
                 ]
             else:
                 blocks = [Block.AIR]*(16**3)
-            sections[section.get('Y').get()] = ChunkSection(blocks, section, section.get('Y').get())
+            sections[section.get('Y').get()] = ChunkSection(
+                blocks, section, section.get('Y').get())
 
         self.sections = sections
         self.biome_table = [b.get() for b in level_node.get('Biomes').children]
 
-    def _read_width_from_loc(long_list, width, possition):
+    def _read_width_from_loc(self, long_list, width, possition):
         offset = possition * width
         # if this is split across two nums
         if (offset % 64) + width > 64:
@@ -80,16 +91,19 @@ class Chunk:
             side1len = 64 - ((offset) % 64)
             side2len = ((offset + width) % 64)
             # Select the sections we want from each
-            side1 = Chunk._read_bits(long_list[int(offset/64)], side1len, offset % 64)
-            side2 = Chunk._read_bits(long_list[int((offset + width)/64)], side2len, 0)
+            side1 = self._read_bits(
+                long_list[int(offset/64)], side1len, offset % 64)
+            side2 = self._read_bits(
+                long_list[int((offset + width)/64)], side2len, 0)
             # Join them
             comp = (side2 << side1len) + side1
             return comp
         else:
-            comp = Chunk._read_bits(long_list[int(offset/64)], width, offset % 64)
+            comp = self._read_bits(
+                long_list[int(offset/64)], width, offset % 64)
             return comp
 
-    def _read_bits(num, width, start):
+    def _read_bits(self, num, width, start):
         # create a mask of size 'width' of 1 bits
         mask = (2 ** width) - 1
         # shift it out to where we need for the mask
@@ -105,8 +119,8 @@ class Chunk:
         return self.get_section(block_pos[1]).get_block([n % 16 for n in block_pos])
 
     def get_biome(self, block_pos):
-        z = block_pos[2]%16
-        x = block_pos[0]%16
+        z = block_pos[2] % 16
+        x = block_pos[0] % 16
         return self.biome_table[z*16 + x]
 
     def get_section(self, y):
@@ -147,25 +161,31 @@ class World:
 
     def _load_chunk(self, chunk_pos):
         import os
-        chunk_location = os.path.join(self.save_location, self.file_name, "region", self._get_region_file(chunk_pos))
+        chunk_location = os.path.join(
+            self.save_location, self.file_name, "region", self._get_region_file(chunk_pos))
         with open(chunk_location, mode='rb') as region:
             locations = [[
-                        int.from_bytes(region.read(3), byteorder='big', signed=False) * 4096, 
-                        int.from_bytes(region.read(1), byteorder='big', signed=False) * 4096
-                    ] for i in range(1024) ]
+                int.from_bytes(region.read(3), byteorder='big',
+                               signed=False) * 4096,
+                int.from_bytes(region.read(1), byteorder='big',
+                               signed=False) * 4096
+            ] for i in range(1024)]
 
             timestamps = region.read(4096)
 
-            chunk = self._load_binary_chunk_at(region, locations[((chunk_pos[0] % 32) + (chunk_pos[1] % 32) * 32)][0])
+            chunk = self._load_binary_chunk_at(
+                region, locations[((chunk_pos[0] % 32) + (chunk_pos[1] % 32) * 32)][0])
             self.chunks[chunk_pos] = chunk
 
     def _load_binary_chunk_at(self, region_file, offset):
         region_file.seek(offset)
-        datalen = int.from_bytes(region_file.read(4), byteorder='big', signed=False)
+        datalen = int.from_bytes(region_file.read(
+            4), byteorder='big', signed=False)
         compr = region_file.read(1)
         decompressed = zlib.decompress(region_file.read(datalen))
         data = nbt.parse_nbt(stream.InputStream(decompressed))
-        chunk_pos = (data.get('Level').get('xPos').get(), data.get('Level').get('zPos').get())
+        chunk_pos = (data.get('Level').get('xPos').get(),
+                     data.get('Level').get('zPos').get())
         chunk = Chunk(
             chunk_pos[0],
             chunk_pos[1],

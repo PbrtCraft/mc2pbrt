@@ -91,8 +91,8 @@ class LavaSolver:
                 from math import pi
                 fout.write('AttributeBegin\n')
                 fout.write('  Translate -.5 0 -.5\n')
-                fout.write('  Shape "heightfield" "integer nv" [3] "integer nu" [3]\n' +
-                           '  "float Py" [%f %f %f %f %f %f %f %f %f]' % tuple(ps))
+                fout.write('  Shape "heightfield" "integer nv" [3] "integer nu" [3] ' +
+                           '  "float Py" [%f %f %f %f %f %f %f %f %f]\n' % tuple(ps))
                 fout.write('AttributeEnd\n')
 
             if self.getLevel((x, y-1, z)) is None:
