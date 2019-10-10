@@ -61,6 +61,15 @@ Here is a shorter config file:
   "World" : "Idea",
   "Player" : "Mudream",
   "Radius" : 32,
+  "Phenomenons": [
+    {
+      "name": "Sun",
+      "params": {
+        "hour": 16,
+        "scene_radius": 4
+      }
+    }
+  ]  
 }
 ```
 

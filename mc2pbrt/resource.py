@@ -79,7 +79,8 @@ class ResourceManager:
                 return
 
         minecraft_dir = getMinecraftFolder()
-        version = "1.13.2"
+        # TODO: Choose by user
+        version = "1.14.4"
         version_file = os.path.join(
             minecraft_dir, "versions", version, version + ".jar")
         if not os.path.exists(version_file):
