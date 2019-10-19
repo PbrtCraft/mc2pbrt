@@ -20,17 +20,14 @@ class BlockCreator:
         def prefix(y):
             return len(name) >= len(y)+1 and name[:len(y)+1] == y + "_"
 
-        if name in ["air", "cave_air"]:
+        if name in ["air", "cave_air", "lava", "water"]:
             return BlockAir(name, state, biome_id)
         elif check("bed"):
             # TODO
             return BlockNotImplement(name, state, biome_id)
 
         # Setup Model
-        if check("door") or name in BlockBase.LONG_PLANT:
-            return BlockHeight2(name, state, biome_id)
-
-        elif check("leaves"):
+        if check("leaves"):
             return BlockLeaves(name, state, biome_id)
 
         elif check("glass"):
@@ -43,86 +40,15 @@ class BlockCreator:
         elif prefix("infested"):
             return BlockNormal(name[9:], state, biome_id)
 
-        elif name == "nether_portal":
-            return BlockNetherPortal(name, state, biome_id)
-
-        elif check("slab"):
-            return BlockSlab(name, state, biome_id)
-
-        elif check("trapdoor"):
-            return BlockTrapDoor(name, state, biome_id)
-
-        elif check("stairs"):
-            return BlockStairs(name, state, biome_id)
-
-        elif check("fence") or check("wall"):
-            return BlockFenceType(name, state, biome_id)
-
-        elif check("fence_gate"):
-            return BlockFenceGate(name, state, biome_id)
-
-        elif name == "iron_bars":
-            return BlockIronBars(name, state, biome_id)
-
-        elif name == "chorus_plant":
-            return BlockChorusPlant(name, state, biome_id)
-
-        elif check("glass_pane"):
-            return BlockGlassPane(name, state, biome_id)
-
         elif check("chest"):
             return BlockChest(name, state, biome_id)
 
         elif check("sign"):
             return BlockNotImplement(name, state, biome_id)
 
-        elif name in ["wheat", "beetroots", "melon_stem", "pumpkin_stem", "sweet_berry_bush"]:
-            return BlockStages(name, state, biome_id)
-
-        elif name in ["potatoes", "carrots"]:
-            def stage(x): return [0, 0, 1, 1, 2, 2, 2, 3][x]
-            return BlockStages(name, state, biome_id, stage)
-
-        elif name == "nether_wart":
-            def stage(x): return [0, 1, 1, 2][x]
-            return BlockStages(name, state, biome_id, stage)
-
-        elif name == "cake":
-            return BlockCake(name, state, biome_id)
-
-        elif name == "hopper":
-            return BlockHopper(name, state, biome_id)
-
-        elif name == "farm_land":
-            return BlockFarmLand(name, state, biome_id)
-
-        elif name == "snow":
-            return BlockSnow(name, state, biome_id)
-
-        elif name == "redstone_wire":
-            # TODO : d[0] = "redstone_dust_dot"
-            return BlockNotImplement(name, state, biome_id)
-
-        elif name == "repeater":
-            # TODO : d[0] += "_1tick"
-            return BlockNotImplement(name, state, biome_id)
-
-        elif name == "tripwire":
-            # TODO
-            return BlockNotImplement(name, state, biome_id)
-
         elif name == "bubble_column":
             # TODO
             return BlockNotImplement(name, state, biome_id)
-
-        elif name == "scaffolding":
-            return BlockNormal(name + "_stable", state, biome_id)
-
-        elif name == "bamboo":
-            return BlockBamboo(name, state, biome_id)
-
-        elif name == "cocoa":
-            return BlockCocoa(name, state, biome_id)
 
         elif name == "fire":
             return BlockFire(name, state, biome_id)

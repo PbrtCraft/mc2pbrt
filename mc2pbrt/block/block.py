@@ -21,12 +21,11 @@ class BlockBase:
     SOLID_BLOCK = set([
         "stone", "podzol", "clay",
     ])
+
     SOLID_TYPE = [
         "ore", "granite", "diorite", "andesite", "planks", "dirt", "block",
         "wood"
     ]
-    LONG_PLANT = set(["tall_seagrass", "sunflower", "lilac", "rose_bush",
-                      "peony", "tall_grass", "large_fern"])
 
     NORMAL_LIGHT_MAP = {
         "beacon": 15,
@@ -112,6 +111,63 @@ class BlockBase:
         material = _material or self.material
         self.models.append((mdl, transforms, material))
         self.type = par[6:]
+
+    def useBlockstate(self):
+        def apply(model_setting):
+            model_name = model_setting["model"]
+            transforms = []
+            for axis in ["z", "y", "x"]:
+                if axis in model_setting:
+                    ang = model_setting[axis]
+                    transforms.append(
+                        {"type": "rotate", "axis": axis, "angle": ang})
+            self.addModel(model_name, transforms)
+
+        def doApply(appliable):
+            # appliable maybe a list
+            if isinstance(appliable, list):
+                from random import choice
+                apply(choice(appliable))
+            else:
+                apply(appliable)
+
+        def checkWhen(when):
+            if "OR" in when:
+                for cond_when in when["OR"]:
+                    if checkWhen(cond_when):
+                        return True
+                return False
+            for key in when:
+                if when[key] != self.state[key]:
+                    return False
+            return True
+
+        bs = ResourceManager().blockstate_loader.getBlockstate(self.name)
+        if "variants" in bs:
+            var = bs["variants"]
+            for serialize_state in var:
+                if serialize_state == "":
+                    doApply(var[serialize_state])
+                    break
+                ok = True
+                for cond in serialize_state.split(","):
+                    key, value = cond.split("=")
+                    if self.state[key] != value:
+                        ok = False
+                if ok:
+                    doApply(var[serialize_state])
+                    break
+            else:
+                raise NotImplementedError(
+                    "variants not work:" + self.name + "@" + str(self.state))
+
+        elif "multipart" in bs:
+            for part in bs["multipart"]:
+                # check if meet condition
+                if checkWhen(part.get("when", {})):
+                    doApply(part["apply"])
+        else:
+            raise NotImplementedError("Bockstate not work")
 
     def build(self):
         raise NotImplementedError("BlockBase._build")
@@ -199,29 +255,6 @@ class BlockBase:
             return 0
 
         fout.write('AttributeBegin\n')
-        if "axis" in self.state and self.name != "nether_portal":
-            axis = self.state["axis"]
-            if axis == "x":
-                self._writeRotate(fout, "z", 90)
-            elif axis == "z":
-                self._writeRotate(fout, "x", 90)
-
-        if "facing" in self.state:
-            facing = self.state["facing"]
-            if self.type == "orientable":
-                mp = {"north": 0, "east": 1, "south": 2, "west": 3}
-            elif self.type == "template_piston":
-                mp = {"north": 2, "east": 3, "south": 0, "west": 1}
-            else:
-                mp = {"north": 1, "east": 0, "south": 3, "west": 2}
-
-            if facing in mp:
-                self._writeRotate(fout, "y", mp[facing]*90)
-            elif facing == "down":
-                self._writeRotate(fout, "z", -90)
-            elif facing == "top":
-                self._writeRotate(fout, "z", 90)
-
         for model, transforms, material in self.models:
             for t in transforms:
                 if t["type"] == "rotate":

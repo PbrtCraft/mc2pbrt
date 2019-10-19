@@ -43,6 +43,8 @@ class ResourceManager:
 
         self.model_loader = ModelLoader(
             os.path.join(self.assets_path, "models"))
+        self.blockstate_loader = BlockstateLoader(
+            os.path.join(self.assets_path, "blockstates"))
         self.table_alpha = {}
 
     def isFile(self, fn):
@@ -242,4 +244,19 @@ class ModelLoader:
                             uv[0] = 1 - uv[0]
                             uv[2] = 1 - uv[2]
                         face["uv"] = tuple(uv)
+        return self.db[name]
+
+
+class BlockstateLoader:
+    def __init__(self, path):
+        self.path = path
+        self.db = {}
+
+    def _getBlockstate(self, name):
+        with open(self.path + "/" + name + ".json", "r") as f:
+            return json.load(f)
+
+    def getBlockstate(self, name):
+        if name not in self.db:
+            self.db[name] = self._getBlockstate(name)
         return self.db[name]
