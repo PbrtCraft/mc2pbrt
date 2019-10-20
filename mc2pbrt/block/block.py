@@ -138,7 +138,10 @@ class BlockBase:
                         return True
                 return False
             for key in when:
-                if when[key] != self.state[key]:
+                val = self.state[key]
+                if isinstance(when[key], bool):
+                    val = val == "true"
+                if when[key] != val:
                     return False
             return True
 

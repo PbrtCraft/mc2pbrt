@@ -33,6 +33,9 @@ class BlockCreator:
         elif check("glass"):
             return BlockGlass(name, state, biome_id)
 
+        elif check("glass_pane"):
+            return BlockGlassPane(name, state, biome_id)
+
         elif check("banner"):
             # TODO
             return BlockNotImplement(name, state, biome_id)

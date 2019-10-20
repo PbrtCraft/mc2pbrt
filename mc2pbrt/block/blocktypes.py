@@ -13,6 +13,12 @@ class BlockChest(BlockBase):
         self.addModel("entity/chest")
 
 
+class BlockGlassPane(BlockBase):
+    def build(self):
+        self.material = Glass(self)
+        self.useBlockstate()
+
+
 class BlockNormal(BlockBase):
     def build(self):
         if self.getLight():
