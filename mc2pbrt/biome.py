@@ -298,22 +298,22 @@ FOLIAGE_CORNER = [
 ]
 
 
-def getBiomeName(biome_id):
+def getBiomeName(biome_id: int) -> str:
     """Get biome name by biome id"""
-    return BIOMES[biome_id]
+    return BIOMES[biome_id][0]
 
 
-def getFoliageColor(biome_id, elevation):
+def getFoliageColor(biome_id: int, elevation: int):
     """Get foliage color by biome id and height"""
     return _getColor(biome_id, elevation, FOLIAGE_CORNER)
 
 
-def getGrassColor(biome_id, elevation):
+def getGrassColor(biome_id: int, elevation: int):
     """Get grass color by biome id and height"""
     return _getColor(biome_id, elevation, GRASS_CORNER)
 
 
-def _getColor(biome_id, elevation, corner):
+def _getColor(biome_id: int, elevation: int, corner):
     """Calculate biome color by traingle lerp.
 
     Args:

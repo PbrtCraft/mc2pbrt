@@ -1,11 +1,14 @@
-def laglongToCoord(theta, phi):
+from pyanvil.player import Player
+
+
+def laglongToCoord(theta: float, phi: float):
     """Convert lagtitude and longitude to xyz coordinate."""
     from math import cos, sin, pi
     theta, phi = theta/180*pi, phi/180*pi
     return sin(theta)*cos(phi), sin(phi), cos(theta)*cos(phi)
 
 
-def firstPerson(player):
+def firstPerson(player: Player):
     """First person perspective"""
     theta, phi = map(lambda x: -x, player.rot)
     sx, sy, sz = player.pos

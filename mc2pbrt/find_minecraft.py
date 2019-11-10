@@ -3,7 +3,7 @@ import sys
 import errno
 
 
-def getMinecraftFolder():
+def getMinecraftFolder() -> str:
     """Get Miencraft Client Folder"""
     minecraft_dir = ""
     if "APPDATA" in os.environ and sys.platform.startswith("win"):

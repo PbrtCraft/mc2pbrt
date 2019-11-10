@@ -1,3 +1,6 @@
+import typing
+
+
 def create(name, params):
     type_map = {
         "Perspective": Perspective,
@@ -15,7 +18,7 @@ class Perspective:
     def __init__(self, fov: int = 70):
         self.fov = fov
 
-    def write(self, fout):
+    def write(self, fout: typing.io):
         fout.write('Camera "perspective" "float fov" [%f]\n' % self.fov)
 
 
@@ -23,7 +26,7 @@ class Environment:
     def __init__(self):
         pass
 
-    def write(self, fout):
+    def write(self, fout: typing.io):
         fout.write('Camera "environment"\n')
 
 
@@ -31,7 +34,7 @@ class Orthographic:
     def __init__(self):
         pass
 
-    def write(self, fout):
+    def write(self, fout: typing.io):
         fout.write('Camera "orthographic"\n')
 
 
@@ -39,5 +42,5 @@ class Realistic:
     def __init__(self):
         pass
 
-    def write(self, fout):
+    def write(self, fout: typing.io):
         fout.write('Camera "realistic"\n')

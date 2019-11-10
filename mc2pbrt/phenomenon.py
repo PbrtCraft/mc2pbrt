@@ -1,4 +1,5 @@
 import os
+import typing
 
 from resource import ResourceManager
 
@@ -23,7 +24,7 @@ class EnvironmentMap:
         if not ResourceManager().isFile(filename):
             print("[Warning] EnvirnmentMap: %s file does not exist" % filename)
 
-    def write(self, fout):
+    def write(self, fout: typing.io):
         fout.write('AttributeBegin\n')
         fout.write('    Rotate 270 1 0 0 \n')
         fout.write('    LightSource "infinite" "integer nsamples" [16] "rgb L" [1 1 1]' +
@@ -36,7 +37,7 @@ class Fog:
         self.I_s = I_s
         self.I_a = I_a
 
-    def write(self, fout):
+    def write(self, fout: typing.io):
         I_s = tuple([self.I_s]*3)
         I_a = tuple([self.I_a]*3)
         fout.write('MakeNamedMedium "Fog" "string type" "homogeneous" ' +
@@ -56,7 +57,7 @@ class Rayleigh:
         from math import e
         self.I_s = (5.8*e**(-6), 1.35*e**(-5), 3.31*e**(-5))
 
-    def write(self, fout):
+    def write(self, fout: typing.io):
         fout.write('MakeNamedMedium "Rayleigh" "string type" "homogeneous" ' +
                    '"rgb sigma_s" [%f %f %f]\n' % self.I_s +
                    '"rgb sigma_a" [0 0 0]\n')
@@ -77,7 +78,7 @@ class Sun:
         # Empirical formula
         self.scale = 50./(80**2)*(dist**2)
 
-    def write(self, fout):
+    def write(self, fout: typing.io):
         fout.write('LightSource "distant" "point from" [%f %f %f]' % self.position +
                    '"blackbody L" [6500 %f]\n' % self.scale)
 
@@ -87,7 +88,7 @@ class Rain:
         self.size = scene_radius*2 + 1
         self.rainfall = rainfall
 
-    def write(self, fout):
+    def write(self, fout: typing.io):
         from random import uniform, randint
         from tqdm import tqdm
         from util import tqdmpos

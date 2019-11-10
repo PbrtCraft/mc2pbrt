@@ -1,5 +1,6 @@
 import json
 import gzip
+import os
 import http.client
 
 import pyanvil.nbt as nbt
@@ -7,10 +8,10 @@ import pyanvil.stream as stream
 
 
 class Player:
-    def __init__(self, world_path, username):
+    def __init__(self, world_path: str, username: str):
         uuid = self._username_to_uuid(username)
         uuid_fn = self._uuid_to_filename(uuid)
-        player_path = world_path + '/playerdata/' + uuid_fn + ".dat"
+        player_path = os.path.join(world_path, "playerdata", uuid_fn + ".dat")
         with gzip.open(player_path, mode='rb') as p:
             in_stream = stream.InputStream(p.read())
             p_data = nbt.parse_nbt(in_stream)
@@ -19,10 +20,10 @@ class Player:
         self.rot = [c.get() for c in p_data.get("Rotation").children]
         self.dim = p_data.get("Dimension").get()
 
-    def _uuid_to_filename(self, uuid):
+    def _uuid_to_filename(self, uuid: str) -> str:
         return "-".join([uuid[:8], uuid[8:12], uuid[12:16], uuid[16:20], uuid[20:]])
 
-    def _username_to_uuid(self, username):
+    def _username_to_uuid(self, username: str) -> str:
         """Get the UUID of the player."""
         get_args = ""
 

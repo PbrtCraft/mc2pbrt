@@ -47,11 +47,11 @@ class ResourceManager:
             os.path.join(self.assets_path, "blockstates"))
         self.table_alpha = {}
 
-    def isFile(self, fn):
+    def isFile(self, fn: str) -> bool:
         full_filename = os.path.join(self.scenes_path, fn)
         return os.path.isfile(full_filename)
 
-    def hasAlpha(self, texture_fn):
+    def hasAlpha(self, texture_fn: str) -> bool:
         """Check if texture file has alpha channel
 
         Args:
@@ -124,7 +124,7 @@ class ModelLoader:
         self.db = {}
         self.builtin_list = set(["entity/chest"])
 
-    def _resolveTexture(self, data, texname):
+    def _resolveTexture(self, data, texname: str) -> str:
         if texname[0] != '#':
             return texname
         if "textures" in data and texname[1:] in data["textures"]:
@@ -141,7 +141,7 @@ class ModelLoader:
             return True
         return False
 
-    def _resolveTextures(self, data):
+    def _resolveTextures(self, data) -> bool:
         if "textures" in data:
             texs = data["textures"]
             for tex in texs:
@@ -149,7 +149,7 @@ class ModelLoader:
             return True
         return False
 
-    def _getModel(self, name):
+    def _getModel(self, name: str):
         if name in self.builtin_list:
             data = self._builtin(name)
         else:
@@ -172,7 +172,7 @@ class ModelLoader:
                 return par_data, data["parent"]
         return data, ""
 
-    def _builtin(self, name):
+    def _builtin(self, name: str):
         if name == "entity/chest":
             # Source: https://gist.github.com/Choonster/e8668c195eecf800cb5dc53538a9c848
             return {
@@ -222,7 +222,7 @@ class ModelLoader:
                 ]
             }
 
-    def getModel(self, name):
+    def getModel(self, name: str):
         if name not in self.db:
             model, par = self._getModel(name)
             self.db[name] = (model, par)
@@ -248,15 +248,15 @@ class ModelLoader:
 
 
 class BlockstateLoader:
-    def __init__(self, path):
+    def __init__(self, path: str):
         self.path = path
         self.db = {}
 
-    def _getBlockstate(self, name):
+    def _getBlockstate(self, name: str):
         with open(self.path + "/" + name + ".json", "r") as f:
             return json.load(f)
 
-    def getBlockstate(self, name):
+    def getBlockstate(self, name: str):
         if name not in self.db:
             self.db[name] = self._getBlockstate(name)
         return self.db[name]
