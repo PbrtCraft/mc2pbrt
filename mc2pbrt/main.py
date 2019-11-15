@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
     rc = RealCam(
         world_name=settings["World"],
-        player_name=settings["Player"],
+        player_obj=settings["Player"],
         radius=settings["Radius"],
         samples=settings.get("Samples", 16),
         camera=cam,

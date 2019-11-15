@@ -7,9 +7,21 @@ import pyanvil.nbt as nbt
 import pyanvil.stream as stream
 
 
+def create(world_path, obj):
+    if isinstance(obj, str):
+        return Player(world_path, username=obj)
+    if "name" in obj:
+        return Player(world_path, username=obj["name"])
+    elif "uuid" in obj:
+        return Player(world_path, uuid=obj["uuid"])
+    raise KeyError("Player should be create with name or uuid")
+
+
 class Player:
-    def __init__(self, world_path: str, username: str):
-        uuid = self._username_to_uuid(username)
+    def __init__(self, world_path: str, username: str = "", uuid: str = ""):
+        if uuid == "":
+            uuid = self._username_to_uuid(username)
+
         uuid_fn = self._uuid_to_filename(uuid)
         player_path = os.path.join(world_path, "playerdata", uuid_fn + ".dat")
         with gzip.open(player_path, mode='rb') as p:

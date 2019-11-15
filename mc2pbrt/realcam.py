@@ -3,10 +3,10 @@ import errno
 
 import find_minecraft
 import lookat
+import pyanvil.player
 
 from resource import ResourceManager
 from pyanvil.world import World
-from pyanvil.player import Player
 from block import BlockCreator, BlockSolver
 from water import WaterSolver
 from lava import LavaSolver
@@ -17,7 +17,7 @@ from util import tqdmpos
 class RealCam:
     """Produce a scene with radius"""
 
-    def __init__(self, world_name, player_name, radius, samples,
+    def __init__(self, world_name, player_obj, radius, samples,
                  camera, phenomenons, method):
         # World an be a full path or a world folder name
         if os.path.exists(world_name):
@@ -29,7 +29,7 @@ class RealCam:
                 raise FileNotFoundError(errno.ENOENT, "World not found.")
         print("Get world:", world_path)
         self.world_path = world_path
-        self.player = Player(self.world_path, player_name)
+        self.player = pyanvil.player.create(self.world_path, player_obj)
 
         # parameters of scene
         self.radius = radius
