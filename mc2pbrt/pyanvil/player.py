@@ -37,20 +37,13 @@ class Player:
 
     def _username_to_uuid(self, username: str) -> str:
         """Get the UUID of the player."""
-        get_args = ""
-
         http_conn = http.client.HTTPSConnection("api.mojang.com")
-        http_conn.request("GET", "/users/profiles/minecraft/" + username + get_args,
+        http_conn.request("GET", "/users/profiles/minecraft/" + username,
                           headers={'User-Agent': 'Minecraft Username -> UUID', 'Content-Type': 'application/json'})
         response = http_conn.getresponse().read().decode("utf-8")
 
-        if not response:  # No response (player probably doesn't exist)
-            return ""
+        if not response:
+            raise KeyError("player probably doesn't exist")
 
         json_data = json.loads(response)
-        try:
-            uuid = json_data['id']
-        except KeyError as e:
-            print("KeyError raised:", e)
-
-        return uuid
+        return json_data['id']
