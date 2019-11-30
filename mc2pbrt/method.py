@@ -15,7 +15,7 @@ def create(name, params):
     if name in type_map:
         return type_map[name](**params)
     else:
-        raise KeyError("Phenomenon name not found")
+        raise KeyError("Method name not found")
 
 
 class PathTracing:

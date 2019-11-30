@@ -17,7 +17,7 @@ if __name__ == "__main__":
                         action='store_true', help="Use old scene file")
     args = parser.parse_args()
 
-    with open(args.filename, "r") as f:
+    with open(args.filename, "r", encoding="utf-8") as f:
         settings = json.load(f)
 
     phs = []

@@ -1,9 +1,6 @@
 import os
-import sys
 import math
-import gzip
 import zlib
-import time
 
 import pyanvil.nbt as nbt
 import pyanvil.stream as stream
@@ -160,7 +157,6 @@ class World:
         return self.chunks[chunk_pos]
 
     def _load_chunk(self, chunk_pos):
-        import os
         chunk_location = os.path.join(
             self.save_location, self.file_name, "region", self._get_region_file(chunk_pos))
         with open(chunk_location, mode='rb') as region:

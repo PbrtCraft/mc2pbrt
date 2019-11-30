@@ -1,5 +1,4 @@
 import struct
-import sys
 
 
 def write_string(stream, string):

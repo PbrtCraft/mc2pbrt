@@ -24,8 +24,8 @@ class Player:
 
         uuid_fn = self._uuid_to_filename(uuid)
         player_path = os.path.join(world_path, "playerdata", uuid_fn + ".dat")
-        with gzip.open(player_path, mode='rb') as p:
-            in_stream = stream.InputStream(p.read())
+        with gzip.open(player_path, mode='rb') as player_file:
+            in_stream = stream.InputStream(player_file.read())
             p_data = nbt.parse_nbt(in_stream)
 
         self.pos = [c.get() for c in p_data.get("Pos").children]
@@ -38,8 +38,10 @@ class Player:
     def _username_to_uuid(self, username: str) -> str:
         """Get the UUID of the player."""
         http_conn = http.client.HTTPSConnection("api.mojang.com")
-        http_conn.request("GET", "/users/profiles/minecraft/" + username,
-                          headers={'User-Agent': 'Minecraft Username -> UUID', 'Content-Type': 'application/json'})
+        header = {'User-Agent': 'Minecraft Username -> UUID',
+                  'Content-Type': 'application/json'}
+        http_conn.request(
+            "GET", "/users/profiles/minecraft/" + username, headers=header)
         response = http_conn.getresponse().read().decode("utf-8")
 
         if not response:

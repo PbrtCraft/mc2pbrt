@@ -173,7 +173,7 @@ class BlockBase:
             raise NotImplementedError("Bockstate not work")
 
     def build(self):
-        raise NotImplementedError("BlockBase._build")
+        raise NotImplementedError("BlockBase.build")
 
     def _writeElement(self, fout, ele, material):
         from_pt = ele["from"]
