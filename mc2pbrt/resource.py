@@ -3,6 +3,7 @@ import shutil
 import tempfile
 import zipfile
 import json
+import glob
 from tqdm import tqdm
 from PIL import Image
 
@@ -46,6 +47,9 @@ class ResourceManager:
         self.blockstate_loader = BlockstateLoader(
             os.path.join(self.assets_path, "blockstates"))
         self.table_alpha = {}
+        self.ani_map = {}
+        self.setupAni()
+        print(self.ani_map)
 
     def isFile(self, fn: str) -> bool:
         full_filename = os.path.join(self.scenes_path, fn)
@@ -105,6 +109,36 @@ class ResourceManager:
             assets_path = os.path.join(temp_dir, "assets", "minecraft")
             os.rename(os.path.join(assets_path, "textures"), self.scenes_path)
             os.rename(assets_path, self.assets_path)
+
+    def setupAni(self):
+        """Setup animate png to static png"""
+        block_path = os.path.join(self.scenes_path, "block")
+        files = glob.glob(os.path.join(block_path, "*.png"))
+        ani_map = {}
+        for full_org_fn in files:
+            org_fn = os.path.basename(full_org_fn)
+            if not org_fn.endswith(".png"):
+                continue
+            if org_fn.endswith("_static.png"):
+                continue
+            img = Image.open(full_org_fn)
+            w, h = img.size
+            # A minecraft animate png is a long rectangle
+            if w == h:
+                continue
+
+            new_fn = org_fn[:-4] + "_static.png"
+            full_new_fn = os.path.join(block_path, new_fn)
+            ani_map["block/" + org_fn[:-4]] = "block/" + new_fn[:-4]
+            if os.path.isfile(full_new_fn):
+                continue
+
+            l = min(w, h)
+            cropped_img = img.crop((0, 0, l, l))
+
+            # overwrite
+            cropped_img.save(full_org_fn)
+        self.ani_map = ani_map
 
     def setupFire(self):
         """Setup cropped fire texture"""
@@ -239,10 +273,12 @@ class ModelLoader:
                                 uv[i] /= 16.
                         # swap UV
                         uv = [uv[1], uv[0], uv[3], uv[2]]
+                        # Don't know why
                         if name == "entity/chest":
-                            # Don't know why
                             uv[0] = 1 - uv[0]
                             uv[2] = 1 - uv[2]
+                        if name == "block/hanging_lantern":
+                            uv[0] = 1 - uv[0]
                         face["uv"] = tuple(uv)
         return self.db[name]
 

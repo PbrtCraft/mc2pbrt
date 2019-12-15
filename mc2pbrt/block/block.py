@@ -33,6 +33,8 @@ class BlockBase:
         "fire": 15,
         "glowstone": 15,
         "jack_o_lantern": 15,
+        "lantern": 15,
+        "hanging_lantern": 15,
         "lava": 15,
         "sea_lantern": 15,
         "conduit": 15,
