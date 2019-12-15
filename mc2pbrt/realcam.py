@@ -18,7 +18,7 @@ class RealCam:
     """Produce a scene with radius"""
 
     def __init__(self, world_name, player_obj, radius, samples,
-                 camera, phenomenons, method):
+                 camera, phenomenons, method, resolution):
         # World an be a full path or a world folder name
         if os.path.exists(world_name):
             world_path = world_name
@@ -37,6 +37,7 @@ class RealCam:
         self.camera = camera
         self.phenomenons = phenomenons
         self.method = method
+        self.resolution = resolution
 
     def _getBlocks(self):
         """Get blocks by radius"""
@@ -107,7 +108,8 @@ class RealCam:
         fout.write("Scale -1 1 1\n")
 
         fout.write(
-            'Film "image" "integer xresolution" [960] "integer yresolution" [480]\n')
+            'Film "image" "integer xresolution" [%d] "integer yresolution" [%d]\n' %
+            (self.resolution["Width"], self.resolution["Height"]))
 
         fout.write('LookAt %f %f %f  %f %f %f %f %f %f\n' % self.lookat_vec)
 

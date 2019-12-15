@@ -44,6 +44,7 @@ if __name__ == "__main__":
         camera=cam,
         method=use_method,
         phenomenons=phs,
+        resolution=settings.get("Resolution", {"Width": 960, "Height": 480}),
     )
 
     rc.run(
