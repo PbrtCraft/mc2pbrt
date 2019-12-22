@@ -2,6 +2,8 @@ from util import tqdmpos
 
 from tuple_calculation import plus
 
+from pbrtwriter import PbrtWriter
+
 
 class LavaSolver:
     """Write the lava in then scene."""
@@ -57,99 +59,94 @@ class LavaSolver:
             sum_xs += x or 0
         return sum_xs/cnt
 
-    def write(self, fout):
+    def write(self, pbrtwriter: PbrtWriter):
         print("Writing lava blocks...")
 
-        fout.write('AttributeBegin\n')
-        fout.write('AreaLightSource "diffuse" "blackbody L" [1400 100]\n')
+        with pbrtwriter.attribute():
+            pbrtwriter.areaLightSource("diffuse", "blackbody L", [1400, 100])
 
-        for x, y, z in tqdmpos(range(self.X), range(self.Y), range(self.Z)):
-            if self.level[y][z][x] == None:
-                continue
-            pt = (x, y, z)
-            # h = self._level2height(self.level[y][z][x])
-            fout.write('AttributeBegin\n')
-            fout.write('Translate %f %f %f\n' % plus(pt, (.5, 0, .5)))
+            for x, y, z in tqdmpos(range(self.X), range(self.Y), range(self.Z)):
+                if self.level[y][z][x] == None:
+                    continue
+                pt = (x, y, z)
+                # h = self._level2height(self.level[y][z][x])
+                with pbrtwriter.attribute():
+                    pbrtwriter.translate(plus(pt, (.5, 0, .5)))
 
-            if self.getLevel((x, y+1, z)) != None:
-                # When a lava block is on current block, the lava should be full.
-                ps = [1]*9
-            else:
-                dt = [(-1, -1), (-1, 0), (-1, 1), (0, -1),
-                      (0, 0), (0, 1), (1, -1), (1, 0), (1, 1)]
-                hs = [None]*9
-                for i in range(9):
-                    hs[i] = self.getHeight((x+dt[i][1], y, z+dt[i][0]))
+                    if self.getLevel((x, y+1, z)) != None:
+                        # When a lava block is on current block, the lava should be full.
+                        ps = [1]*9
+                    else:
+                        dt = [(-1, -1), (-1, 0), (-1, 1), (0, -1),
+                              (0, 0), (0, 1), (1, -1), (1, 0), (1, 1)]
+                        hs = [None]*9
+                        for i in range(9):
+                            hs[i] = self.getHeight((x+dt[i][1], y, z+dt[i][0]))
 
-                ps = [[0, 1, 3, 4], [1, 4], [1, 2, 4, 5],
-                      [3, 4], [4], [4, 5],
-                      [3, 4, 6, 7], [4, 7], [4, 5, 7, 8]]
+                        ps = [[0, 1, 3, 4], [1, 4], [1, 2, 4, 5],
+                              [3, 4], [4], [4, 5],
+                              [3, 4, 6, 7], [4, 7], [4, 5, 7, 8]]
 
-                ps = [self.calAvg(map(lambda x: hs[x], p)) for p in ps]
+                        ps = [self.calAvg(map(lambda x: hs[x], p)) for p in ps]
 
-            if self.getLevel((x, y+1, z)) is None:
-                from math import pi
-                fout.write('AttributeBegin\n')
-                fout.write('  Translate -.5 0 -.5\n')
-                fout.write('  Shape "heightfield" "integer nv" [3] "integer nu" [3] ' +
-                           '  "float Py" [%f %f %f %f %f %f %f %f %f]\n' % tuple(ps))
-                fout.write('AttributeEnd\n')
+                    if self.getLevel((x, y+1, z)) is None:
+                        from math import pi
+                        with pbrtwriter.attribute():
+                            pbrtwriter.translate((-.5, 0, -.5))
+                            pbrtwriter.shape("heightfield", "integer nv", [3], "integer nu", [3],
+                                             "float Py", ps)
 
-            if self.getLevel((x, y-1, z)) is None:
-                fout.write('Shape "quady"\n')
+                    if self.getLevel((x, y-1, z)) is None:
+                        pbrtwriter.shape("quady")
 
-            def param(pts):
-                flat_pts = []
-                for pt in pts:
-                    flat_pts += list(pt)
-                return "[" + " ".join(map(str, flat_pts)) + "]"
+                    def flat(xs):
+                        ret = []
+                        for x in xs:
+                            ret += list(x)
+                        return ret
 
-            def trimesh(mv, pts, inds):
-                fout.write('AttributeBegin\n')
-                fout.write('  Translate %f %f %f\n' % mv)
-                fout.write('  Shape "trianglemesh" "point P" %s ' % param(pts) +
-                           '  "integer indices" %s' % param(inds))
-                fout.write('AttributeEnd\n')
+                    def trimesh(mv, pts, inds):
+                        with pbrtwriter.attribute():
+                            pbrtwriter.translate(mv)
+                            pbrtwriter.shape(
+                                "trianglemesh", "point P", flat(pts), "integer indices", flat(inds))
 
-            def rev(inds):
-                ret = list(inds)
-                for i in range(len(ret)):
-                    tri = ret[i]
-                    ret[i] = (tri[0], tri[2], tri[1])
-                return ret
+                    def rev(inds):
+                        ret = list(inds)
+                        for i in range(len(ret)):
+                            tri = ret[i]
+                            ret[i] = (tri[0], tri[2], tri[1])
+                        return ret
 
-            indx = [(0, 1, 2), (1, 3, 2), (2, 3, 4), (3, 5, 4)]
-            if self.getLevel((x-1, y, z)) is None:
-                pts = [
-                    (0, 0, -.5), (0, ps[0], -.5),
-                    (0, 0, 0), (0, ps[3], 0),
-                    (0, 0, .5), (0, ps[6], .5),
-                ]
-                trimesh((-.5, 0, 0), pts, rev(indx))
+                    indx = [(0, 1, 2), (1, 3, 2), (2, 3, 4), (3, 5, 4)]
+                    if self.getLevel((x-1, y, z)) is None:
+                        pts = [
+                            (0, 0, -.5), (0, ps[0], -.5),
+                            (0, 0, 0), (0, ps[3], 0),
+                            (0, 0, .5), (0, ps[6], .5),
+                        ]
+                        trimesh((-.5, 0, 0), pts, rev(indx))
 
-            if self.getLevel((x+1, y, z)) is None:
-                pts = [
-                    (0, 0, -.5), (0, ps[2], -.5),
-                    (0, 0, 0), (0, ps[5], 0),
-                    (0, 0, .5), (0, ps[8], .5),
-                ]
-                trimesh((.5, 0, 0), pts, indx)
+                    if self.getLevel((x+1, y, z)) is None:
+                        pts = [
+                            (0, 0, -.5), (0, ps[2], -.5),
+                            (0, 0, 0), (0, ps[5], 0),
+                            (0, 0, .5), (0, ps[8], .5),
+                        ]
+                        trimesh((.5, 0, 0), pts, indx)
 
-            if self.getLevel((x, y, z-1)) is None:
-                pts = [
-                    (-.5, 0, 0), (-.5, ps[0], 0),
-                    (0, 0, 0), (0, ps[1], 0),
-                    (.5, 0, 0), (.5, ps[2], 0),
-                ]
-                trimesh((0, 0, -.5), pts, indx)
+                    if self.getLevel((x, y, z-1)) is None:
+                        pts = [
+                            (-.5, 0, 0), (-.5, ps[0], 0),
+                            (0, 0, 0), (0, ps[1], 0),
+                            (.5, 0, 0), (.5, ps[2], 0),
+                        ]
+                        trimesh((0, 0, -.5), pts, indx)
 
-            if self.getLevel((x, y, z+1)) is None:
-                pts = [
-                    (-.5, 0, 0), (-.5, ps[6], 0),
-                    (0, 0, 0), (0, ps[7], 0),
-                    (.5, 0, 0), (.5, ps[8], 0),
-                ]
-                trimesh((0, 0, .5), pts, rev(indx))
-
-            fout.write('AttributeEnd\n')
-        fout.write('AttributeEnd\n')
+                    if self.getLevel((x, y, z+1)) is None:
+                        pts = [
+                            (-.5, 0, 0), (-.5, ps[6], 0),
+                            (0, 0, 0), (0, ps[7], 0),
+                            (.5, 0, 0), (.5, ps[8], 0),
+                        ]
+                        trimesh((0, 0, .5), pts, rev(indx))

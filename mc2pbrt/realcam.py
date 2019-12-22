@@ -136,7 +136,7 @@ class RealCam:
         block_solver.write(pbrtwriter, self.stand_pt)
 
         water_solver = WaterSolver(blocks)
-        water_solver.write(fout)
+        water_solver.write(pbrtwriter)
 
         lava_solver = LavaSolver(blocks)
-        lava_solver.write(fout)
+        lava_solver.write(pbrtwriter)
