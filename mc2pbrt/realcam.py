@@ -8,8 +8,7 @@ import pyanvil.player
 from resource import ResourceManager
 from pyanvil.world import World
 from block import BlockCreator, BlockSolver
-from water import WaterSolver
-from lava import LavaSolver
+from liquid import WaterSolver, LavaSolver
 from pbrtwriter import PbrtWriter
 
 from util import tqdmpos
