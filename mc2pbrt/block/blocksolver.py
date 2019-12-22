@@ -1,6 +1,8 @@
 from resource import ResourceManager
 from tuple_calculation import plus_i, mult_i
 
+from pbrtwriter import PbrtWriter
+
 
 class BlockSolver:
     """Write all solid block in the scene"""
@@ -26,14 +28,14 @@ class BlockSolver:
                     self.used_texture = self.used_texture | self.block[y][z][x].getUsedTexture(
                     )
 
-    def write(self, fout, start_pt):
+    def write(self, pbrtwriter: PbrtWriter, start_pt):
         print("Writing solid blocks...")
         for fn in self.used_texture:
-            fout.write(
-                'Texture "%s-color" "spectrum" "imagemap" "string filename" "%s.png"\n' % (fn, fn))
+            pbrtwriter.texture("%s-color" % fn, "spectrum",
+                               "imagemap", "string filename", "%s.png" % fn)
             if ResourceManager().hasAlpha(fn + ".png"):
-                fout.write(
-                    'Texture "%s-alpha" "float" "imagemap" "bool alpha" "true" "string filename" "%s.png"\n' % (fn, fn))
+                pbrtwriter.texture("%s-alpha" % fn, "float", "imagemap",
+                                   "bool alpha", "true", "string filename", "%s.png" % fn)
 
         import queue
         que = queue.Queue()
@@ -59,9 +61,9 @@ class BlockSolver:
             b = self.block[y][z][x]
 
             if not b.empty():
-                fout.write('Translate %d %d %d\n' % pt)
-                cnt += b.write(fout)
-                fout.write('Translate %d %d %d\n' % mult_i(pt, -1))
+                pbrtwriter.translate(pt)
+                cnt += b.write(pbrtwriter)
+                pbrtwriter.translate(mult_i(pt, -1))
 
             if b.canPass():
                 for delta in deltas:

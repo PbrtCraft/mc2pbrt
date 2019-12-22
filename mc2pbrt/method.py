@@ -1,5 +1,7 @@
 import typing
 
+from pbrtwriter import PbrtWriter
+
 
 def create(name, params):
     type_map = {
@@ -22,33 +24,29 @@ class PathTracing:
     def __init__(self, maxdepth: int = 5):
         self.maxdepth = maxdepth
 
-    def write(self, fout: typing.io):
-        fout.write(
-            'Integrator "path" "integer maxdepth" [%d]\n' % self.maxdepth)
+    def write(self, pbrtwriter: PbrtWriter):
+        pbrtwriter.integrator("path", "integer maxdepth", [self.maxdepth])
 
 
 class BidirectionalPathTracing:
     def __init__(self, maxdepth: int = 5):
         self.maxdepth = maxdepth
 
-    def write(self, fout: typing.io):
-        fout.write(
-            'Integrator "bdpt" "integer maxdepth" [%d]\n' % self.maxdepth)
+    def write(self, pbrtwriter: PbrtWriter):
+        pbrtwriter.integrator("bdpt", "integer maxdepth", [self.maxdepth])
 
 
 class MetropolisLightTransport:
     def __init__(self, maxdepth: int = 5):
         self.maxdepth = maxdepth
 
-    def write(self, fout: typing.io):
-        fout.write(
-            'Integrator "mlt" "integer maxdepth" [%d]\n' % self.maxdepth)
+    def write(self, pbrtwriter: PbrtWriter):
+        pbrtwriter.integrator("mlt", "integer maxdepth", [self.maxdepth])
 
 
 class StochasticProgressivePhotonMapping:
     def __init__(self, maxdepth: int = 5):
         self.maxdepth = maxdepth
 
-    def write(self, fout: typing.io):
-        fout.write(
-            'Integrator "sppm" "integer maxdepth" [%d]\n' % self.maxdepth)
+    def write(self, pbrtwriter: PbrtWriter):
+        pbrtwriter.integrator("sppm", "integer maxdepth", [self.maxdepth])

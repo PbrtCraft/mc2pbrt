@@ -4,6 +4,8 @@ from material import Matte
 from util import pt_map
 from tuple_calculation import plus, mult, minus
 
+from pbrtwriter import PbrtWriter
+
 
 def sea_pickle(b):
     """ Sea pickle's light """
@@ -177,81 +179,74 @@ class BlockBase:
     def build(self):
         raise NotImplementedError("BlockBase.build")
 
-    def _writeElement(self, fout, ele, material):
+    def _writeElement(self, pbrtwriter: PbrtWriter, ele, material):
         from_pt = ele["from"]
         to_pt = ele["to"]
         cube = minus(to_pt, from_pt)
         mid = mult(plus(from_pt, to_pt), .5)
 
-        fout.write('AttributeBegin\n')
-        fout.write('Translate %f %f %f\n' % mid)
-        if "rotation" in ele:
-            import math
-            rot = ele["rotation"]
-            axis = rot["axis"]
-            org = minus(mid, mult(rot["origin"], 1./16))
-            ang = rot["angle"]
-            rxyz = {"x": (1, 0, 0), "y": (0, 1, 0), "z": (0, 0, 1)}
-            sxyz = {"x": (0, 1, 1), "y": (1, 0, 1), "z": (1, 1, 0)}
-            fout.write("Translate %f %f %f\n" % mult(org, -1))
-            fout.write(("Rotate %f " % ang) + ("%d %d %d\n" % rxyz[axis]))
-            if "rescale" in rot and rot["rescale"]:
-                scale = 1/math.cos(ang/180.*math.pi)
-                fout.write("Scale %f %f %f\n" %
-                           plus(mult(sxyz[axis], scale), rxyz[axis]))
-            fout.write("Translate %f %f %f\n" % org)
-
-        for facename in ele["faces"]:
-            face = ele["faces"][facename]
-            tex = face["texture"]
-            uv = face["uv"]
-            delta_f, l_f, dir_, shape = pt_map[facename]
-            delta = delta_f(cube)
-            l1, l2 = l_f(cube)
-            fout.write('AttributeBegin\n')
-            if "rotation" in face:
+        with pbrtwriter.attribute():
+            pbrtwriter.translate(mid)
+            if "rotation" in ele:
+                import math
+                rot = ele["rotation"]
+                axis = rot["axis"]
+                org = minus(mid, mult(rot["origin"], 1./16))
+                ang = rot["angle"]
                 rxyz = {"x": (1, 0, 0), "y": (0, 1, 0), "z": (0, 0, 1)}
-                # shape[-1] should be "x", "y" or "z"
-                fout.write(
-                    ("Rotate %f " % (face["rotation"]*dir_)) + ("%d %d %d\n" % rxyz[shape[-1]]))
+                sxyz = {"x": (0, 1, 1), "y": (1, 0, 1), "z": (1, 1, 0)}
+                pbrtwriter.translate(mult(org, -1))
+                pbrtwriter.rotate(ang, rxyz[axis])
+                if "rescale" in rot and rot["rescale"]:
+                    scale = 1/math.cos(ang/180.*math.pi)
+                    pbrtwriter.scale(plus(mult(sxyz[axis], scale), rxyz[axis]))
+                pbrtwriter.translate(org)
 
-            if material:
-                material.write(fout, face)
+            for facename in ele["faces"]:
+                face = ele["faces"][facename]
+                tex = face["texture"]
+                uv = face["uv"]
+                delta_f, l_f, dir_, shape = pt_map[facename]
+                delta = delta_f(cube)
+                l1, l2 = l_f(cube)
+                with pbrtwriter.attribute():
+                    if "rotation" in face:
+                        rxyz = {"x": (1, 0, 0), "y": (0, 1, 0), "z": (0, 0, 1)}
+                        # shape[-1] should be "x", "y" or "z"
+                        pbrtwriter.rotate(
+                            face["rotation"]*dir_, rxyz[shape[-1]])
 
-            fout.write('  Translate %f %f %f\n' % delta)
-            if ResourceManager().hasAlpha(tex + ".png"):
-                fout.write('  Shape "%s" "float l1" [%f] "float l2" [%f] ' % (shape, l1, l2) +
-                           '  "float dir" [%d] "texture alpha" "%s-alpha"' % (dir_, tex) +
-                           '  "float u0" [%f] "float v0" [%f] "float u1" [%f] "float v1" [%f]\n' % uv)
-            else:
-                fout.write('  Shape "%s" "float l1" [%f] "float l2" [%f] ' % (shape, l1, l2) +
-                           '  "float dir" [%d] ' % (dir_, ) +
-                           '  "float u0" [%f] "float v0" [%f] "float u1" [%f] "float v1" [%f]\n' % uv)
-            fout.write('AttributeEnd\n')
+                    if material:
+                        material.write(pbrtwriter, face)
 
-        fout.write('AttributeEnd\n')
+                    pbrtwriter.translate(delta)
+                    params = ["float l1", [l1], "float l2", [l2], "float dir", [dir_],
+                              "float u0", uv[0], "float v0", uv[1], "float u1", uv[2], "float v1", uv[3]]
+                    if ResourceManager().hasAlpha(tex + ".png"):
+                        params.append("texture alpha")
+                        params.append("%s-alpha" % tex)
+                    pbrtwriter.shape(shape, *params)
 
-    def _writeRotate(self, fout, axis, ang):
+    def _writeRotate(self, pbrtwriter: PbrtWriter, axis, ang):
         org = (.5, .5, .5)
-        fout.write("Translate %f %f %f\n" % org)
+        pbrtwriter.translate(org)
         rxyz = {"x": (1, 0, 0), "y": (0, 1, 0), "z": (0, 0, 1)}
-        fout.write(("Rotate %f " % ang) + ("%d %d %d\n" % rxyz[axis]))
-        fout.write("Translate %f %f %f\n" % mult(org, -1))
+        pbrtwriter.rotate(ang, rxyz[axis])
+        pbrtwriter.translate(mult(org, -1))
 
-    def _writeScale(self, fout, axis, s):
+    def _writeScale(self, pbrtwriter: PbrtWriter, axis, s):
         org = (.5, .5, .5)
-        fout.write("Translate %f %f %f\n" % org)
+        pbrtwriter.translate(org)
         axis_v = {"x": (1, 0, 0), "y": (0, 1, 0), "z": (0, 0, 1)}
         sixa_v = {"x": (0, 1, 1), "y": (1, 0, 1), "z": (1, 1, 0)}
-        fout.write(("Scale %f %f %f\n" %
-                    plus(mult(axis_v[axis], s), sixa_v[axis])))
-        fout.write("Translate %f %f %f\n" % mult(org, -1))
+        pbrtwriter.scale(plus(mult(axis_v[axis], s), sixa_v[axis]))
+        pbrtwriter.translate(mult(org, -1))
 
-    def write(self, fout):
+    def write(self, pbrtwriter: PbrtWriter):
         """Write file with pbrt format
 
         Args:
-            fout: file object
+            pbrtwriter: Pbrtwriter Object
         Returns:
             Number of render block(0 or 1)
         """
@@ -259,21 +254,20 @@ class BlockBase:
         if self.empty():
             return 0
 
-        fout.write('AttributeBegin\n')
-        for model, transforms, material in self.models:
-            for t in transforms:
-                if t["type"] == "rotate":
-                    self._writeRotate(fout, t["axis"], t["angle"])
-                elif t["type"] == "scale":
-                    self._writeScale(fout, t["axis"], t["value"])
-            for ele in model["elements"]:
-                self._writeElement(fout, ele, material)
-            for t in transforms[::-1]:
-                if t["type"] == "rotate":
-                    self._writeRotate(fout, t["axis"], -t["angle"])
-                elif t["type"] == "scale":
-                    self._writeScale(fout, t["axis"], 1/t["value"])
-        fout.write('AttributeEnd\n')
+        with pbrtwriter.attribute():
+            for model, transforms, material in self.models:
+                for t in transforms:
+                    if t["type"] == "rotate":
+                        self._writeRotate(pbrtwriter, t["axis"], t["angle"])
+                    elif t["type"] == "scale":
+                        self._writeScale(pbrtwriter, t["axis"], t["value"])
+                for ele in model["elements"]:
+                    self._writeElement(pbrtwriter, ele, material)
+                for t in transforms[::-1]:
+                    if t["type"] == "rotate":
+                        self._writeRotate(pbrtwriter, t["axis"], -t["angle"])
+                    elif t["type"] == "scale":
+                        self._writeScale(pbrtwriter, t["axis"], 1/t["value"])
         return 1
 
     def getUsedTexture(self):

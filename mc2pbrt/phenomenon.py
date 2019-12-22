@@ -2,6 +2,7 @@ import os
 import typing
 
 from resource import ResourceManager
+from pbrtwriter import PbrtWriter
 
 
 def create(name, params):
@@ -24,12 +25,11 @@ class EnvironmentMap:
         if not ResourceManager().isFile(filename):
             print("[Warning] EnvirnmentMap: %s file does not exist" % filename)
 
-    def write(self, fout: typing.io):
-        fout.write('AttributeBegin\n')
-        fout.write('    Rotate 270 1 0 0 \n')
-        fout.write('    LightSource "infinite" "integer nsamples" [16] "rgb L" [1 1 1]' +
-                   '"string mapname" ["%s"]\n' % self.filename)
-        fout.write('AttributeEnd\n')
+    def write(self, pbrtwriter: PbrtWriter):
+        with pbrtwriter.attribute():
+            pbrtwriter.rotate(270, [1, 0, 0])
+            pbrtwriter.lightSource("infinite", "integer nsamples", [16],
+                                   "rgb L", [1, 1, 1], "string mapname", [self.filename])
 
 
 class Fog:
@@ -37,13 +37,12 @@ class Fog:
         self.I_s = I_s
         self.I_a = I_a
 
-    def write(self, fout: typing.io):
+    def write(self, pbrtwriter: PbrtWriter):
         I_s = tuple([self.I_s]*3)
         I_a = tuple([self.I_a]*3)
-        fout.write('MakeNamedMedium "Fog" "string type" "homogeneous" ' +
-                   '"rgb sigma_s" [%f %f %f]\n' % I_s +
-                   '"rgb sigma_a" [%f %f %f]\n' % I_a)
-        fout.write('MediumInterface "" "Fog"\n')
+        pbrtwriter.makeNamedMedium(
+            "Fog", "string type", "homogeneous", "rgb sigma_s", I_s, "rgb sigma_a", I_a)
+        pbrtwriter.mediumInterface("", "Fog")
 
 
 class Rayleigh:
@@ -57,11 +56,10 @@ class Rayleigh:
         from math import e
         self.I_s = (5.8*e**(-6), 1.35*e**(-5), 3.31*e**(-5))
 
-    def write(self, fout: typing.io):
-        fout.write('MakeNamedMedium "Rayleigh" "string type" "homogeneous" ' +
-                   '"rgb sigma_s" [%f %f %f]\n' % self.I_s +
-                   '"rgb sigma_a" [0 0 0]\n')
-        fout.write('MediumInterface "" "Rayleigh"\n')
+    def write(self, pbrtwriter: PbrtWriter):
+        pbrtwriter.makeNamedMedium(
+            "Rayleigh", "string type", "homogeneous", "rgb sigma_s", self.I_s, "rgb sigma_a", [0, 0, 0])
+        pbrtwriter.mediumInterface("", "Rayleigh")
 
 
 class Sun:
@@ -78,9 +76,9 @@ class Sun:
         # Empirical formula
         self.scale = 50./(80**2)*(dist**2)
 
-    def write(self, fout: typing.io):
-        fout.write('LightSource "distant" "point from" [%f %f %f]' % self.position +
-                   '"blackbody L" [6500 %f]\n' % self.scale)
+    def write(self, pbrtwriter: PbrtWriter):
+        pbrtwriter.lightSource("distant", "point from",
+                               self.position, "blackbody L", [6500, self.scale])
 
 
 class Rain:
@@ -88,7 +86,7 @@ class Rain:
         self.size = scene_radius*2 + 1
         self.rainfall = rainfall
 
-    def write(self, fout: typing.io):
+    def write(self, pbrtwriter: PbrtWriter):
         from random import uniform, randint
         from tqdm import tqdm
         from util import tqdmpos
@@ -96,32 +94,29 @@ class Rain:
         def uni01(x): return uniform(0, 1)
 
         print("Preparing rain instance...")
-        fout.write('AttributeBegin\n')
-        fout.write(
-            'Material "glass" "float eta" [1.33] "rgb Kt" [.28 .72 1]\n')
-        for i in tqdm(range(100), ascii=True):
-            fout.write('ObjectBegin "RainStreak%02d"\n' % i)
-            for dummy_1 in range(100*self.rainfall):
-                fout.write('AttributeBegin\n')
-                x, y, z = map(uni01, [None]*3)
-                l = uniform(0, 0.1)
-                fout.write('Translate %f %f %f\n' % (x, y, z))
-                fout.write('Shape "cylinder" "float radius" [0.001] ' +
-                           '"float zmin" [%f] "float zmax" [%f]\n' % (-l/2, l/2))
-                fout.write('AttributeEnd\n')
-            fout.write('ObjectEnd\n')
+        with pbrtwriter.attribute():
+            pbrtwriter.material("glass", "float eta", [
+                                1.33], "rgb Kt", [.28, .72, 1])
 
-        # Pbrt cylinder is z-base.
-        fout.write('ConcatTransform [1 0 0 0 ' +
-                   '0 0 1 0 ' +
-                   '0 1 0 0 ' +
-                   '0 0 0 1]\n')
-        sz = self.size
-        print("Writing rain streaks...")
-        for x, y, z in tqdmpos(range(sz), range(sz), range(256)):
-            ind = randint(0, 99)
-            fout.write('AttributeBegin\n')
-            fout.write("Translate %d %d %d\n" % (x, y, z))
-            fout.write('ObjectInstance "RainStreak%02d"\n' % ind)
-            fout.write('AttributeEnd\n')
-        fout.write('AttributeEnd\n')
+            for i in tqdm(range(100), ascii=True):
+                with pbrtwriter.objectb("RainStreak%02d" % i):
+                    for dummy_1 in range(100*self.rainfall):
+                        with pbrtwriter.attribute():
+                            x, y, z = map(uni01, [None]*3)
+                            l = uniform(0, 0.1)
+                            pbrtwriter.translate((x, y, z))
+                            pbrtwriter.shape("cylinder", "float radius", [
+                                             0.001], "float zmin", [-l/2], "float zmax", [l/2])
+
+            # Pbrt cylinder is z-base.
+            pbrtwriter.concatTransform([1, 0, 0, 0,
+                                        0, 0, 1, 0,
+                                        0, 1, 0, 0,
+                                        0, 0, 0, 1])
+            sz = self.size
+            print("Writing rain streaks...")
+            for x, y, z in tqdmpos(range(sz), range(sz), range(256)):
+                ind = randint(0, 99)
+                with pbrtwriter.attribute():
+                    pbrtwriter.translate((x, y, z))
+                    pbrtwriter.objectInstance("RainStreak%02d" % ind)

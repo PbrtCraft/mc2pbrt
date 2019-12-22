@@ -1,5 +1,7 @@
 import typing
 
+from pbrtwriter import PbrtWriter
+
 
 def create(name, params):
     type_map = {
@@ -18,29 +20,29 @@ class Perspective:
     def __init__(self, fov: int = 70):
         self.fov = fov
 
-    def write(self, fout: typing.io):
-        fout.write('Camera "perspective" "float fov" [%f]\n' % self.fov)
+    def write(self, pbrtwriter: PbrtWriter):
+        pbrtwriter.camera("perspective", "float fov", [self.fov])
 
 
 class Environment:
     def __init__(self):
         pass
 
-    def write(self, fout: typing.io):
-        fout.write('Camera "environment"\n')
+    def write(self, pbrtwriter: PbrtWriter):
+        pbrtwriter.camera("environment")
 
 
 class Orthographic:
     def __init__(self):
         pass
 
-    def write(self, fout: typing.io):
-        fout.write('Camera "orthographic"\n')
+    def write(self, pbrtwriter: PbrtWriter):
+        pbrtwriter.camera("orthographic")
 
 
 class Realistic:
     def __init__(self):
         pass
 
-    def write(self, fout: typing.io):
-        fout.write('Camera "realistic"\n')
+    def write(self, pbrtwriter: PbrtWriter):
+        pbrtwriter.camera("realistic")

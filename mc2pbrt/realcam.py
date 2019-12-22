@@ -10,6 +10,7 @@ from pyanvil.world import World
 from block import BlockCreator, BlockSolver
 from water import WaterSolver
 from lava import LavaSolver
+from pbrtwriter import PbrtWriter
 
 from util import tqdmpos
 
@@ -102,36 +103,37 @@ class RealCam:
 
     def _writeMain(self, filename, scene_filename):
         fout = open(filename, "w")
+        pbrtwriter = PbrtWriter(fout)
 
         # The coordinate system of minecraft and pbrt is different.
         # Pbrt is lefthand base, while minecraft is righthand base.
-        fout.write("Scale -1 1 1\n")
+        pbrtwriter.scale((-1, 1, 1))
 
-        fout.write(
-            'Film "image" "integer xresolution" [%d] "integer yresolution" [%d]\n' %
-            (self.resolution["Width"], self.resolution["Height"]))
+        pbrtwriter.film("image",
+                        "integer xresolution", [self.resolution["Width"]],
+                        "integer yresolution", [self.resolution["Height"]])
 
-        fout.write('LookAt %f %f %f  %f %f %f %f %f %f\n' % self.lookat_vec)
+        pbrtwriter.lookAt(self.lookat_vec)
 
-        self.camera.write(fout)
-        self.method.write(fout)
+        self.camera.write(pbrtwriter)
+        self.method.write(pbrtwriter)
 
-        fout.write(
-            'Sampler "lowdiscrepancy" "integer pixelsamples" [%d]\n' % self.samples)
+        pbrtwriter.sampler(
+            "lowdiscrepancy", "integer pixelsamples", [self.samples])
 
-        fout.write('WorldBegin\n')
-        fout.write('Include "%s"\n' % scene_filename)
-        fout.write('WorldEnd\n')
+        with pbrtwriter.world():
+            pbrtwriter.include(scene_filename)
 
     def _writeScene(self, filename):
         fout = open(filename, "w")
+        pbrtwriter = PbrtWriter(fout)
 
         for phenomenon in self.phenomenons:
-            phenomenon.write(fout)
+            phenomenon.write(pbrtwriter)
 
         blocks = self._getBlocks()
         block_solver = BlockSolver(blocks)
-        block_solver.write(fout, self.stand_pt)
+        block_solver.write(pbrtwriter, self.stand_pt)
 
         water_solver = WaterSolver(blocks)
         water_solver.write(fout)
