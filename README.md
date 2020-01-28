@@ -12,7 +12,7 @@ To render a minecraft scene, it takes serveral steps.
 * Third, use [pbrt-v3-minecraft](https://github.com/PbrtCraft/pbrt-v3-minecraft) to render pbrt file:
     `$ ./pbrt [path-to-mc2pbrt]/scenes/[pbrtfile].pbrt`
 
-For client part, `realcam.py` will auto collect the resource of minecraft 1.13.2,
+For client part, mc2pbrt will auto collect the resource of minecraft 1.14.4,
 while for server part, the user need to download the resource pack and put files into right folders.
 
 ## Config
@@ -47,8 +47,12 @@ Example:
 
 * Samples: Samples per pixel, default value is 16.
 * Camera: Pbrt camera name and parameter, default value is a perspective camera with fov = 70.
-* World: World name (if envirnment is minecraft client) or full path
-* Player: Id of player
+* World: World name (if envirnment is minecraft client) or a full path to world
+* Player: ID of player. Allow two type of input:
+  - Use player name:
+    - dict: `{"name": "Player name"}`
+    - string: `"Player name"`
+  - Use player UUID: `{"uuid": "Player uuid"}`
 * Phenomenons: A list of phenomenons, see more detail at **Phenomenons System**.
 * Method: Render method, default is path tracing.
 * Radius: Render block radius
@@ -75,7 +79,7 @@ Here is a shorter config file:
 
 ### Phenomenons System
 
-#### EnvLight
+#### EnvironmentMap
 
 Use envirnment light map as sky. Parameters:
 
@@ -96,3 +100,11 @@ Parameters:
 
 * `I_s`: Scatter scalar
 * `I_a`: Absorb scalar 
+
+#### Rain
+
+Generate many cylinder to simulate rain drop.
+
+Parameters:
+
+* `rainfall`: quantity of rain
